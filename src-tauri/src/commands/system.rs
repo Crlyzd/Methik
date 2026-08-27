@@ -208,3 +208,119 @@ fn open_folder_in_os(path_str: &str) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(target_os = "windows")]
+mod win_clipboard {
+    use std::ffi::c_void;
+    use std::ptr;
+
+    #[link(name = "user32")]
+    extern "system" {
+        fn OpenClipboard(hWndNewOwner: *mut c_void) -> i32;
+        fn CloseClipboard() -> i32;
+        fn GetClipboardData(uFormat: u32) -> *mut c_void;
+    }
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GlobalLock(hMem: *mut c_void) -> *mut c_void;
+        fn GlobalUnlock(hMem: *mut c_void) -> i32;
+    }
+
+    const CF_UNICODETEXT: u32 = 13;
+
+    pub fn get_text() -> Result<String, String> {
+        unsafe {
+            if OpenClipboard(ptr::null_mut()) == 0 {
+                return Ok(String::new());
+            }
+
+            let handle = GetClipboardData(CF_UNICODETEXT);
+            if handle.is_null() {
+                CloseClipboard();
+                return Ok(String::new());
+            }
+
+            let ptr = GlobalLock(handle) as *const u16;
+            if ptr.is_null() {
+                CloseClipboard();
+                return Ok(String::new());
+            }
+
+            let mut len = 0;
+            while *ptr.add(len) != 0 {
+                len += 1;
+            }
+
+            let slice = std::slice::from_raw_parts(ptr, len);
+            let text = String::from_utf16_lossy(slice);
+
+            GlobalUnlock(handle);
+            CloseClipboard();
+
+            Ok(text)
+        }
+    }
+}
+
+/// Reads plain text from the native system clipboard without triggering webview permission dialogs
+#[tauri::command]
+pub fn read_clipboard() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        win_clipboard::get_text()
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(String::new())
+    }
+}
+
+/// Returns whether the application is running in development / debug mode
+#[tauri::command]
+pub fn is_dev_mode() -> bool {
+    cfg!(debug_assertions)
+}
+
+/// Records a log event into %APPDATA%/Methik/logs/app.log
+#[tauri::command]
+pub fn log_client_event(level: String, module: String, message: String) -> Result<(), String> {
+    crate::config::paths::append_app_log(&level, &module, &message);
+    Ok(())
+}
+
+/// Returns application metadata including version and running architecture (x64 / arm64)
+#[tauri::command]
+pub fn get_app_info() -> crate::engine::updater::AppInfo {
+    crate::engine::updater::get_application_info()
+}
+
+/// Checks GitHub releases API for latest release matching current system architecture
+#[tauri::command]
+pub async fn check_for_updates() -> Result<crate::engine::updater::UpdateCheckResult, String> {
+    crate::engine::updater::check_latest_release().await
+}
+
+/// Downloads and applies update for the running architecture
+#[tauri::command]
+pub async fn download_and_apply_update(
+    download_url: String,
+    on_progress: Channel<crate::engine::updater::UpdateProgress>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let handle_for_progress = app_handle.clone();
+    let channel_for_progress = on_progress.clone();
+    let callback = Arc::new(move |progress: crate::engine::updater::UpdateProgress| {
+        let _ = channel_for_progress.send(progress.clone());
+        let _ = handle_for_progress.emit("update-progress", progress);
+    });
+
+    crate::engine::updater::perform_update(download_url, callback).await
+}
+
+/// Cancels an in-progress update download
+#[tauri::command]
+pub fn cancel_update() -> Result<(), String> {
+    crate::engine::updater::set_update_cancelled(true);
+    Ok(())
+}

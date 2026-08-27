@@ -1,3 +1,4 @@
+use crate::config::paths::append_app_log;
 use crate::core::models::{
     BatchProgressInfo, DownloadOptions, DownloadProgress,
 };
@@ -15,6 +16,8 @@ pub async fn download_video(
         return Err("URL cannot be empty".to_string());
     }
 
+    append_app_log("INFO", "Download", &format!("Starting download for URL: {}", options.url));
+
     if options.cookie_source.is_none() {
         let settings = crate::config::paths::load_user_settings();
         options.cookie_source = settings.cookie_source;
@@ -25,9 +28,16 @@ pub async fn download_video(
         let _ = handle_for_progress.emit("download-progress", progress);
     });
 
-    execute_download(&options, callback)
-        .await
-        .map_err(|e| format!("{}", e))
+    match execute_download(&options, callback).await {
+        Ok(()) => {
+            append_app_log("INFO", "Download", &format!("Successfully completed download for: {}", options.url));
+            Ok(())
+        }
+        Err(e) => {
+            append_app_log("ERROR", "Download", &format!("Download failed for {}: {}", options.url, e));
+            Err(format!("{}", e))
+        }
+    }
 }
 
 /// IPC command to execute batch playlist downloads with dual item & overall progress tracking
@@ -65,6 +75,8 @@ pub async fn download_playlist(
         return Err("No playlist items selected for download".to_string());
     }
 
+    append_app_log("INFO", "Download", &format!("Starting playlist download for: {} ({} selected items)", options.url, total_items));
+
     // 2. Iterate sequentially through selected items
     for (i, entry) in entries_to_download.iter().enumerate() {
         let current_index = i + 1;
@@ -74,6 +86,8 @@ pub async fn download_playlist(
         let mut item_options = options.clone();
         item_options.url = entry.url.clone();
         item_options.playlist_indices = None; // Single entry download
+
+        append_app_log("INFO", "Download", &format!("Downloading playlist item {}/{}: '{}'", current_index, total_items, item_title));
 
         let title_for_callback = item_title.clone();
         let callback = Arc::new(move |mut progress: DownloadProgress| {
@@ -90,10 +104,13 @@ pub async fn download_playlist(
             let _ = handle_for_progress.emit("download-progress", progress);
         });
 
-        execute_download(&item_options, callback)
-            .await
-            .map_err(|e| format!("Failed downloading item {}: {}", current_index, e))?;
+        if let Err(e) = execute_download(&item_options, callback).await {
+            append_app_log("ERROR", "Download", &format!("Failed playlist item {}/{}: {}", current_index, total_items, e));
+            return Err(format!("Failed downloading item {}: {}", current_index, e));
+        }
     }
+
+    append_app_log("INFO", "Download", &format!("Successfully completed playlist download: {}", options.url));
 
     // Final batch completed event
     let _ = app_handle.emit(
@@ -139,12 +156,15 @@ pub async fn download_queue(
     }
 
     let total_items = items.len();
+    append_app_log("INFO", "Download", &format!("Starting queue download for {} items", total_items));
 
     for (i, item_opt) in items.iter().enumerate() {
         let current_index = i + 1;
         let handle_for_progress = app_handle.clone();
         let channel_for_progress = on_progress.clone();
         let current_item_id = item_opt.item_id.clone();
+
+        append_app_log("INFO", "Download", &format!("Processing queue item {}/{}: URL: {}", current_index, total_items, item_opt.url));
 
         let callback = Arc::new(move |mut progress: DownloadProgress| {
             let item_pct = progress.percent;
@@ -165,10 +185,14 @@ pub async fn download_queue(
             let _ = handle_for_progress.emit("download-progress", progress);
         });
 
-        execute_download(item_opt, callback)
-            .await
-            .map_err(|e| format!("Failed downloading item {}: {}", current_index, e))?;
+        if let Err(e) = execute_download(item_opt, callback).await {
+            append_app_log("ERROR", "Download", &format!("Queue item {}/{} failed: {}", current_index, total_items, e));
+            return Err(format!("Failed downloading item {}: {}", current_index, e));
+        }
     }
+
+    append_app_log("INFO", "Download", &format!("Successfully finished processing queue of {} items", total_items));
+
 
     // Final completion event
     let finish_prog = DownloadProgress {

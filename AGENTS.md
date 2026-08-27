@@ -8,15 +8,17 @@ It integrates with `yt-dlp` to fetch metadata and stream downloads, wrapped in a
 
 To ensure zero hallucination, maximum code quality, and strict adherence to architecture, development proceeds under a structured multi-agent protocol:
 
+> **MANDATORY RULE 0 - ALWAYS PLAN FIRST**: Before writing, editing, or deleting ANY codebase files, a detailed architectural/implementation plan MUST be drafted and approved by the user. Unplanned modifications are strictly forbidden.
+
 ```mermaid
 graph LR
-    Orchestrator[1. Orchestrator: Step Planning & Context Handoff] --> UserApprove[2. User Approval]
+    Orchestrator[1. Orchestrator / Architect: Plan Creation] --> UserApprove[2. User Approval]
     UserApprove --> CodingSpecialist[3. Coding Specialist: Implementation]
     CodingSpecialist --> CodeReviewer[4. Code Reviewer: Audit & Verification]
     CodeReviewer --> NextStep[5. Step Completion & Handoff to Next Step]
 ```
 
-1. **`/orchestrator`**:
+1. **`/orchestrator` / `/architect`**:
    - Decomposes the task into atomic, checkable steps.
    - Formulates the exact scope, files, and verification plan.
    - Obtains explicit user approval before execution.

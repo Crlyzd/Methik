@@ -6,9 +6,10 @@ pub mod engine;
 use commands::download::{download_playlist, download_queue, download_video};
 use commands::metadata::{get_playlist_info, get_video_info};
 use commands::system::{
-    cancel_provisioning, check_system_dependencies, get_system_paths, get_user_settings,
-    open_appdata_folder, open_logs_folder, open_url, provision_dependencies,
-    save_user_settings_command, select_download_folder, uninstall_binaries,
+    cancel_provisioning, cancel_update, check_for_updates, check_system_dependencies,
+    download_and_apply_update, get_app_info, get_system_paths, get_user_settings, is_dev_mode,
+    log_client_event, open_appdata_folder, open_logs_folder, open_url, provision_dependencies,
+    read_clipboard, save_user_settings_command, select_download_folder, uninstall_binaries,
 };
 use commands::window::{
     close_window, minimize_window, set_view_window_mode, toggle_always_on_top, toggle_maximize_window,
@@ -20,6 +21,18 @@ pub fn run() {
     if let Err(err) = config::paths::ensure_app_directories() {
         eprintln!("[Methik] Warning: Failed to initialize AppData directories: {}", err);
     }
+
+    config::paths::append_app_log(
+        "INFO",
+        "AppBoot",
+        &format!(
+            "Methik v{} ({}) starting up. Mode: {}. AppData: {:?}",
+            env!("CARGO_PKG_VERSION"),
+            engine::updater::CURRENT_ARCH,
+            if cfg!(debug_assertions) { "Development" } else { "Release" },
+            config::paths::get_appdata_dir()
+        ),
+    );
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -34,6 +47,13 @@ pub fn run() {
             get_user_settings,
             save_user_settings_command,
             select_download_folder,
+            read_clipboard,
+            is_dev_mode,
+            log_client_event,
+            get_app_info,
+            check_for_updates,
+            download_and_apply_update,
+            cancel_update,
             get_video_info,
             get_playlist_info,
             download_video,
@@ -46,10 +66,7 @@ pub fn run() {
             set_view_window_mode
         ])
         .setup(|_app| {
-            println!(
-                "[Methik] Application initialized. Isolated AppData path: {:?}",
-                config::paths::get_appdata_dir()
-            );
+            config::paths::append_app_log("INFO", "AppBoot", "Tauri runtime window setup completed.");
             Ok(())
         })
         .run(tauri::generate_context!())

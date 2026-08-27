@@ -28,9 +28,126 @@ const Api = {
     return () => {};
   },
 
+  /**
+   * Reads clipboard text natively via Tauri IPC to prevent browser permission prompts
+   */
+  async readClipboard() {
+    if (this.isTauri()) {
+      try {
+        const text = await this.invoke('read_clipboard');
+        return typeof text === 'string' ? text : '';
+      } catch (err) {
+        console.warn('[Api] Native read_clipboard failed, falling back:', err);
+      }
+    }
+    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      try {
+        return await navigator.clipboard.readText();
+      } catch (_) {
+        return '';
+      }
+    }
+    return '';
+  },
+
+  /**
+   * Checks whether the app is running in development/debug mode
+   */
+  async isDevMode() {
+    if (this.isTauri()) {
+      try {
+        return await this.invoke('is_dev_mode');
+      } catch (_) {
+        return false;
+      }
+    }
+    return true; // Web preview is considered dev mode
+  },
+
+  /**
+   * Writes a log entry into %APPDATA%/Methik/logs/app.log
+   */
+  async log(level, module, message) {
+    if (this.isTauri()) {
+      try {
+        await this.invoke('log_client_event', { level: String(level), module: String(module), message: String(message) });
+      } catch (_) {}
+    } else {
+      console.log(`[AppLog:${level}][${module}] ${message}`);
+    }
+  },
+
+  /**
+   * Retrieves application metadata including version, running architecture and dev mode status
+   */
+  async getAppInfo() {
+    if (this.isTauri()) {
+      try {
+        return await this.invoke('get_app_info');
+      } catch (err) {
+        console.warn('[Api] get_app_info failed:', err);
+      }
+    }
+    return { name: 'Methik', version: '0.1.0', arch: 'x64', os: 'windows', is_dev: true };
+  },
+
+  /**
+   * Checks GitHub Releases API for the latest version matching current architecture
+   */
+  async checkForUpdates() {
+    if (this.isTauri()) {
+      return await this.invoke('check_for_updates');
+    }
+    return this._mockResponse('check_for_updates');
+  },
+
+  /**
+   * Downloads and applies matching update
+   */
+  async downloadAndApplyUpdate(downloadUrl, onProgress) {
+    if (this.isTauri()) {
+      return await this.invoke('download_and_apply_update', { downloadUrl, onProgress });
+    }
+    console.warn('[Api Mock] downloadAndApplyUpdate triggered for:', downloadUrl);
+    return true;
+  },
+
+  /**
+   * Cancels update download
+   */
+  async cancelUpdate() {
+    if (this.isTauri()) {
+      return await this.invoke('cancel_update');
+    }
+    return true;
+  },
+
   // Mock responses for testing frontend directly in browser preview
   _mockResponse(cmd, args) {
     switch (cmd) {
+      case 'is_dev_mode':
+        return true;
+      case 'get_app_info':
+        return { name: 'Methik', version: '0.1.0', arch: 'x64', os: 'windows', is_dev: true };
+      case 'check_for_updates':
+        return {
+          has_update: false,
+          current_version: '0.1.0',
+          latest_version: '0.1.0',
+          release_name: 'Methik v0.1.0',
+          release_notes: 'Initial release with multi-architecture support.',
+          release_url: 'https://github.com/Crlyzd/Methik/releases',
+          download_url: null,
+          asset_name: null,
+          asset_size: 0,
+          arch: 'x64',
+          matching_asset_found: true
+        };
+      case 'download_and_apply_update':
+      case 'cancel_update':
+        return true;
+      case 'log_client_event':
+        return null;
       case 'check_system_dependencies':
         return {
           ytdlp: { name: 'yt-dlp', is_installed: true, version: '2026.02.14', path: '%APPDATA%/Methik/bin/yt-dlp.exe', is_valid: true, min_version_required: '2024.01.01', source: 'AppData' },

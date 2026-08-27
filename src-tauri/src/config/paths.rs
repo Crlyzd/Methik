@@ -162,6 +162,60 @@ pub fn ensure_app_directories() -> Result<(), std::io::Error> {
     Ok(())
 }
 
+const MAX_LOG_SIZE_BYTES: u64 = 2 * 1024 * 1024; // 2 MB strict limit
+
+fn get_utc_timestamp() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let total_secs = now.as_secs();
+    let sec = total_secs % 60;
+    let min = (total_secs / 60) % 60;
+    let hour = (total_secs / 3600) % 24;
+    let mut days = total_secs / 86400;
+
+    // Euclidean affine civil calendar conversion from epoch days
+    days += 719468;
+    let era = days / 146097;
+    let doe = days - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = if m <= 2 { y + 1 } else { y };
+
+    format!("{:04}-{:02}-{:02} {:02}:{:02}:{:02} UTC", year, m, d, hour, min, sec)
+}
+
+/// Appends a structured, timestamped log line to `%APPDATA%/Methik/logs/app.log`.
+/// Automatically rotates `app.log` to `app.log.old` when it exceeds 2 MB to prevent log explosion.
+pub fn append_app_log(level: &str, module: &str, message: &str) {
+    let _ = ensure_app_directories();
+    let log_path = get_logs_dir().join("app.log");
+    let old_log_path = get_logs_dir().join("app.log.old");
+
+    if let Ok(meta) = fs::metadata(&log_path) {
+        if meta.len() >= MAX_LOG_SIZE_BYTES {
+            let _ = fs::remove_file(&old_log_path);
+            let _ = fs::rename(&log_path, &old_log_path);
+        }
+    }
+
+    let timestamp = get_utc_timestamp();
+    let line = format!("[{}] [{}] [{}] {}\n", timestamp, level.to_uppercase(), module, message);
+
+    use std::io::Write;
+    if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(&log_path) {
+        let _ = file.write_all(line.as_bytes());
+    }
+
+    #[cfg(debug_assertions)]
+    {
+        print!("{}", line);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -26,7 +26,7 @@
         </div>
         <div data-tauri-drag-region>
           <span class="brand-name">METHIK</span>
-          <span class="brand-version">v0.1</span>
+          <span class="brand-version" id="brandVersion">v0.1</span>
         </div>
       </div>
 
@@ -317,7 +317,7 @@
           </div>
           <div>
             <h3 class="modal-title" style="font-size: 17px; letter-spacing: 0.5px;">METHIK</h3>
-            <p class="modal-subtitle">v0.1 • Universal Video & Audio Stream Suite</p>
+            <p class="modal-subtitle" id="aboutSubtitle">v0.1 • Universal Video & Audio Stream Suite</p>
           </div>
         </div>
         <button class="btn-close" onclick="App.closeModal('aboutModal')">
@@ -569,6 +569,69 @@
       <!-- Modal Footer Controls -->
       <div class="error-modal-footer">
         <button class="btn-error-dismiss" onclick="App.closeModal('errorModal')">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- UPDATE AVAILABLE / INSTALL MODAL (Strict Zero Emoji & Glass)-->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="updateModal">
+    <div class="modal-box update-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="confirm-icon-badge">
+            <svg class="svg-icon svg-stroke" style="width:20px; height:20px; color: var(--accent-cyan);" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="updateModalTitle">Update Available</h3>
+            <p class="modal-subtitle" id="updateModalSubtitle">New version ready for your system</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('updateModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="confirm-modal-body">
+        <div class="update-meta-badge" id="updateMetaBadge">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <svg class="svg-icon svg-stroke" style="width:14px; height:14px; color:var(--status-valid);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="updateVersionInfo" style="font-weight:600; color:var(--text-main);">v0.1.0</span>
+          </div>
+          <span id="updateFileSize" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-dim);">~3.4 MB</span>
+        </div>
+
+        <div class="update-notes-container">
+          <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Release Notes</span>
+          <pre class="update-notes-body" id="updateNotesText">Loading release notes...</pre>
+        </div>
+
+        <!-- Download & Install Progress Bar (Shown during update) -->
+        <div class="provision-progress-section" id="updateProgressSection" style="display: none; margin-top: 10px;">
+          <div class="provision-progress-header">
+            <span class="provision-label" id="updateProgressLabel">Downloading Update</span>
+            <span class="provision-pct" id="updatePct">0.0%</span>
+          </div>
+          <div class="provision-progress-track">
+            <div class="provision-progress-fill" id="updateFill" style="width: 0%;"></div>
+          </div>
+          <div class="provision-footer-meta">
+            <span class="provision-meta-detail" id="updateBytes">Connecting...</span>
+          </div>
+        </div>
+
+        <div class="confirm-modal-actions" id="updateModalActions">
+          <button class="btn-confirm-cancel" onclick="App.closeModal('updateModal')">Later</button>
+          <button class="btn-confirm-install" id="btnPerformUpdate" onclick="App.startAppUpdate()">
+            <svg class="svg-icon svg-stroke" style="width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span id="btnPerformUpdateText">Update & Restart</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
