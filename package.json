@@ -1,0 +1,15 @@
+{
+  "name": "methik",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ultra-Lightweight Frosted Glass YouTube Downloader",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.7"
+  }
+}

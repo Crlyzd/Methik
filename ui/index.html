@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methik v0.1 - Frosted Glass Downloader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Ambient Background Glow Effects -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Main Window Frame -->
+  <main class="app-window">
+    
+    <!-- Top Titlebar Controls -->
+    <header class="app-titlebar" data-tauri-drag-region>
+      <div class="brand-left" data-tauri-drag-region>
+        <div class="brand-icon">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        </div>
+        <div data-tauri-drag-region>
+          <span class="brand-name">METHIK</span>
+          <span class="brand-version">v0.1</span>
+        </div>
+      </div>
+
+      <div class="titlebar-actions">
+        <!-- Always On Top Pin Toggle -->
+        <button class="btn-icon" id="btnPin" onclick="App.togglePin()" title="Always on Top">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+        </button>
+
+        <!-- Settings Modal Trigger -->
+        <button class="btn-icon" onclick="App.openModal('settingsModal')" title="Preferences & Engines">
+          <svg class="svg-icon svg-stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+
+        <!-- About Modal Trigger -->
+        <button class="btn-icon" onclick="App.openModal('aboutModal')" title="About Methik">
+          <svg class="svg-icon svg-stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </button>
+
+        <div class="titlebar-divider"></div>
+
+        <!-- Window Controls -->
+        <div class="window-controls">
+          <button class="btn-win-ctrl" onclick="App.minimizeWindow()" title="Minimize">
+            <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"/></svg>
+          </button>
+          <button class="btn-win-ctrl btn-win-close" onclick="App.closeWindow()" title="Close">
+            <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- First Launch / Missing Dependencies Banner Warning -->
+    <section class="banner-warning" id="depWarningBanner" style="display: none;">
+      <div class="banner-content">
+        <svg class="svg-icon svg-stroke" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span><strong>Dependencies Required:</strong> Download portable <code>yt-dlp</code> & <code>ffmpeg</code> into AppData to enable downloads.</span>
+      </div>
+      <button class="btn-banner" onclick="App.startProvisioning()">
+        Auto-Download Binaries
+      </button>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 1. CLEAN HERO FRONT PAGE (Initial State - queue.length=0) -->
+    <!-- ========================================================= -->
+    <section class="hero-view" id="heroView">
+      <div class="hero-brand">
+        <div class="hero-logo">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        </div>
+        <h1 class="hero-title">METHIK</h1>
+        <p class="hero-desc">
+          Ultra-lightweight, 100% portable YouTube video & audio stream downloader. No setup required.
+        </p>
+        <div class="hero-badges">
+          <span class="hero-badge">4K UHD</span>
+          <span class="hero-badge">1080p FHD</span>
+          <span class="hero-badge">MP3 320k</span>
+          <span class="hero-badge">FLAC Lossless</span>
+          <span class="hero-badge">Full Playlists</span>
+        </div>
+      </div>
+
+      <!-- Centered Google-Style Link Pill Bar -->
+      <div class="hero-search-box">
+        <div class="search-pill">
+          <div class="search-pill-icon">
+            <svg class="svg-icon svg-stroke" style="width:15px; height:15px;" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <input type="text" id="heroUrlInput" placeholder="Paste YouTube link (video, shorts, or playlist)...">
+          <div class="search-pill-actions">
+            <button class="btn-pill-paste" id="btnHeroPaste" onclick="App.pasteHeroLink()" title="Paste from clipboard">
+              <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span>Paste</span>
+            </button>
+            <button class="btn-pill-action" id="btnHeroAnalyze" onclick="App.analyzeFromHero()">
+              <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span id="btnHeroAnalyzeText">Analyze Stream</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 2. STREAM QUEUE VIEW (Active State - queue.length > 0)    -->
+    <!-- ========================================================= -->
+    <section class="queue-view" id="queueView" style="display: none;">
+      <!-- Top Google-Style Link Pill Bar to Add More Items -->
+      <div class="search-pill-container">
+        <div class="search-pill">
+          <div class="search-pill-icon">
+            <svg class="svg-icon svg-stroke" style="width:15px; height:15px;" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <input type="text" id="queueUrlInput" placeholder="Add another video or playlist link to queue...">
+          <div class="search-pill-actions">
+            <button class="btn-pill-paste" id="btnQueuePaste" onclick="App.pasteQueueLink()" title="Paste from clipboard">
+              <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span>Paste</span>
+            </button>
+            <button class="btn-pill-action" id="btnQueueAnalyze" onclick="App.analyzeFromQueue()">
+              <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span id="btnQueueAnalyzeText">Add Stream</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue Header Bar -->
+      <div class="queue-bar">
+        <div class="queue-title-group">
+          <span class="queue-title">Stream Queue</span>
+          <span class="queue-count-badge" id="queueBadge">0 Items</span>
+        </div>
+        <div class="queue-actions-group">
+          <span class="queue-action-link" onclick="App.selectAll(true)">Select All</span>
+          <span style="color: var(--glass-border);">•</span>
+          <span class="queue-action-link" onclick="App.selectAll(false)">Deselect All</span>
+          <span style="color: var(--glass-border);">•</span>
+          <span class="queue-action-link" onclick="App.clearQueue()" style="color: var(--status-danger);">Clear</span>
+        </div>
+      </div>
+
+      <!-- Stream Queue List -->
+      <div class="queue-list" id="queueList">
+        <!-- Rendered dynamically by App.renderQueue() -->
+      </div>
+    </section>
+
+    <!-- Fixed Bottom Toolbar (Revealed in Queue View) -->
+    <footer class="app-footer" id="appFooter" style="display: none;">
+      <div class="footer-left">
+        <div class="save-to-group">
+          <span class="save-to-label">Save to:</span>
+          <code class="save-to-path" id="savePathDisplay">Desktop</code>
+          <button class="btn-browse" onclick="App.browseDownloadFolder()" title="Change folder">
+            <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Change</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <span class="queue-summary-text" id="queueSummary">0 selected</span>
+        <button class="btn-download-primary" id="btnDownloadQueue" onclick="App.startQueueDownload()" disabled>
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span id="btnDownloadQueueText">Download Selected (0)</span>
+        </button>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- ========================================================== -->
+  <!-- PREFERENCES & STORAGE MODAL                                -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px; color:var(--accent-cyan);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <div>
+            <h3 class="modal-title">Preferences & Engines</h3>
+            <p class="modal-subtitle">Storage destination, themes & isolated AppData binaries</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('settingsModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Theme Mode Section -->
+      <div>
+        <div class="theme-section-title">Appearance & Theme Mode</div>
+        <div class="theme-cards-grid">
+          <div class="theme-card active" id="themeCardDark" onclick="App.setTheme('dark')">
+            <div class="theme-icon-box">
+              <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div class="theme-card-info">
+              <span class="theme-card-name">Dark Mode</span>
+              <span class="theme-card-sub">Frosted Glass</span>
+            </div>
+          </div>
+
+          <div class="theme-card" id="themeCardLight" onclick="App.setTheme('light')">
+            <div class="theme-icon-box">
+              <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </div>
+            <div class="theme-card-info">
+              <span class="theme-card-name">Light Mode</span>
+              <span class="theme-card-sub">Mica / Acrylic</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Processing Engines Section -->
+      <div>
+        <div class="theme-section-title">Media Processing Engines</div>
+        <div class="engine-panel">
+          <div class="engine-row">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg class="svg-icon svg-stroke" style="width:15px; height:15px; color: var(--accent-cyan);" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>yt-dlp:</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--accent-cyan);" id="ytdlpVersionLabel">Checking...</span>
+            </div>
+            <div class="badge-valid" id="ytdlpBadge">Valid</div>
+          </div>
+
+          <div class="engine-row">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg class="svg-icon svg-stroke" style="width:15px; height:15px; color: var(--accent-violet);" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              <span>FFmpeg:</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--accent-violet);" id="ffmpegVersionLabel">Checking...</span>
+            </div>
+            <div class="badge-valid" id="ffmpegBadge">Valid</div>
+          </div>
+
+          <!-- Primary Install/Update Button -->
+          <button class="btn-engine-primary" id="btnEngineProvision" onclick="App.startProvisioning()">
+            <span id="btnEngineProvisionIcon" style="display:flex; align-items:center;">
+              <svg class="svg-icon svg-stroke" style="width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </span>
+            <span id="btnEngineProvisionText">Install / Update Binaries to AppData</span>
+          </button>
+        </div>
+
+        <!-- Simplified AppData Link Footnote -->
+        <p class="engine-footnote">
+          Downloads and installs binaries directly into <a class="appdata-link" onclick="App.openAppData()">AppData</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ABOUT & CREDITS MODAL (Alitken-Style Frosted Glass)        -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal-box about-box">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="about-header-logo">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+          </div>
+          <div>
+            <h3 class="modal-title" style="font-size: 17px; letter-spacing: 0.5px;">METHIK</h3>
+            <p class="modal-subtitle">v0.1 • Universal Video & Audio Stream Suite</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('aboutModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Author Card & Buy Me A Coffee -->
+      <div class="about-author-card">
+        <div class="author-credit-row">
+          <span>Made with</span>
+          <svg class="svg-icon svg-stroke" style="width:14px; height:14px; color:#ef4444;" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>by</span>
+          <a class="author-link" onclick="App.openUrl('https://kaleksananbagus.com/')">Kaleksanan Bagus</a>
+        </div>
+
+        <div class="coffee-links-row">
+          <svg class="svg-icon svg-stroke" style="width:14px; height:14px; color:#f59e0b;" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <span>Buy me a coffee:</span>
+          <a class="btn-pill-link" onclick="App.openUrl('https://saweria.co/curlyzed')">
+            <span>Saweria</span>
+            <svg class="svg-icon svg-stroke" style="width:10px; height:10px;" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+          <span style="color:var(--text-dim);">/</span>
+          <a class="btn-pill-link paypal" onclick="App.openUrl('https://paypal.me/BagusMassani')">
+            <span>PayPal</span>
+            <svg class="svg-icon svg-stroke" style="width:10px; height:10px;" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Version Status Row -->
+      <div class="version-status-box">
+        <div class="version-status-left">
+          <svg class="svg-icon svg-stroke check-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span id="aboutVersionStatusText">METHIK v0.1 (Latest Version)</span>
+        </div>
+        <button class="btn-check-version" onclick="App.checkAppVersion()">
+          <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Check</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons Row (Report Bug & Open Logs) -->
+      <div class="about-actions-grid">
+        <button class="btn-about-action" onclick="App.openUrl('https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform')">
+          <svg class="svg-icon svg-stroke" style="color:var(--status-warning);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>
+          <span>Report Bug / Request</span>
+        </button>
+
+        <button class="btn-about-action" onclick="App.openLogs()">
+          <svg class="svg-icon svg-stroke" style="color:var(--accent-cyan);" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Open Logs</span>
+        </button>
+      </div>
+
+      <!-- Active Engine Status Banner -->
+      <div class="badge-active-engine">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Active Engine: Isolated AppData</span>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--status-valid);">(yt-dlp + FFmpeg)</span>
+      </div>
+
+      <!-- Technical Footer -->
+      <div class="about-tech-footer">
+        <span>Engine: Tauri v2 • Rust Tokio</span>
+        <span>Powered by yt-dlp & FFmpeg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- DOWNLOADING DEPENDENCIES MODAL (Alitken-Style Frosted Glass) -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="provisionModal">
+    <div class="modal-box provision-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="spinner-ring" id="provSpinner"></div>
+          <div>
+            <h3 class="modal-title" id="provTitle">Downloading Dependencies...</h3>
+            <p class="modal-subtitle" id="provSubtitle">Downloading portable binaries into AppData...</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('provisionModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="provision-progress-section">
+        <div class="provision-progress-header">
+          <span class="provision-label">Download Progress</span>
+          <span class="provision-pct" id="provPct">0.0%</span>
+        </div>
+        <div class="provision-progress-track">
+          <div class="provision-progress-fill" id="provFill" style="width: 0%;"></div>
+        </div>
+        <div class="provision-footer-meta">
+          <span class="provision-meta-detail" id="provBytes">Preparing download...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
