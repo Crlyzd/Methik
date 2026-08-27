@@ -31,14 +31,16 @@ graph LR
 
 ## Key Architectural Principles
 
-1. **100% Portability & AppData Isolation**:
+1. **100% Portability & Shared Library Architecture**:
    - The user does **NOT** need to manually install Python, `yt-dlp`, or `ffmpeg` to their system `$PATH`.
-   - All external binaries, dependencies, logs, and caches must be placed and managed in `%APPDATA%/Methik/` (`bin/`, `logs/`, `config/`).
-   - The application includes an auto-provisioner module that silently/transparently downloads and verifies `yt-dlp.exe` and `ffmpeg.exe` directly into AppData on first launch.
+   - External binaries are shared across apps in `%LOCALAPPDATA%/curlyzed/bin/` (and `%LOCALAPPDATA%/curlyzed/`) to prevent duplicate storage.
+   - Methik maintains isolated logs and settings in `%APPDATA%/Methik/` (`logs/`, `config/`).
+   - The application includes an auto-provisioner module that silently/transparently downloads and verifies `yt-dlp.exe`, `ffmpeg.exe`, `ffprobe.exe`, and `deno.exe` directly into the shared library directory.
    - Priority binary resolution:
-     1. `%APPDATA%/Methik/bin/` (isolated AppData directory)
-     2. Relative `./bin/` (portable USB mode)
-     3. System `$PATH` fallback
+     1. `%LOCALAPPDATA%/curlyzed/bin/` and `%LOCALAPPDATA%/curlyzed/` (Shared curlyzed libraries)
+     2. `%APPDATA%/Methik/bin/` (isolated Methik AppData fallback)
+     3. Relative `./bin/` (portable USB mode)
+     4. System `$PATH` fallback
 
 2. **Strict Non-Monolithic / Layered Design**:
    - **Presentation (Frontend)**: Vanilla HTML5, Vanilla CSS3 (Glassmorphism), Vanilla ES6+ JS. Zero heavy JS frameworks (React, Vue, Node.js runtime).

@@ -13,8 +13,22 @@ pub fn get_appdata_dir() -> PathBuf {
     }
 }
 
-/// Returns the isolated binary directory: `%APPDATA%/Methik/bin`
+/// Returns the shared application data root: `%LOCALAPPDATA%/curlyzed` (Windows) or `~/.local/share/curlyzed` (Unix).
+pub fn get_shared_curlyzed_dir() -> PathBuf {
+    if let Some(base) = dirs::data_local_dir() {
+        base.join("curlyzed")
+    } else {
+        get_appdata_dir()
+    }
+}
+
+/// Returns the shared binary directory: `%LOCALAPPDATA%/curlyzed/bin`
 pub fn get_bin_dir() -> PathBuf {
+    get_shared_curlyzed_dir().join("bin")
+}
+
+/// Returns the legacy isolated Methik binary directory: `%APPDATA%/Methik/bin` (for backward compatibility fallback)
+pub fn get_legacy_appdata_bin_dir() -> PathBuf {
     get_appdata_dir().join("bin")
 }
 
@@ -157,8 +171,11 @@ mod tests {
         let app_dir = get_appdata_dir();
         assert!(app_dir.to_string_lossy().contains("Methik") || app_dir.to_string_lossy().contains(".methik"));
 
+        let shared_dir = get_shared_curlyzed_dir();
+        assert!(shared_dir.to_string_lossy().contains("curlyzed"));
+
         let bin_dir = get_bin_dir();
-        assert_eq!(bin_dir, app_dir.join("bin"));
+        assert_eq!(bin_dir, shared_dir.join("bin"));
 
         let ytdlp_path = get_ytdlp_bin_path();
         assert!(ytdlp_path.to_string_lossy().ends_with(get_ytdlp_bin_name()));

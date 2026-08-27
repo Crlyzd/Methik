@@ -73,10 +73,12 @@ pub fn build_playlist_metadata_args(url: &str, cookie_source: Option<&CookieSour
 pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
     let mut args = Vec::new();
 
-    // 1. Point yt-dlp to isolated AppData FFmpeg binary directory
-    let bin_dir = get_bin_dir();
+    // 1. Point yt-dlp to FFmpeg location (shared curlyzed/bin or active binary directory)
+    let ffmpeg_loc = crate::engine::dependency::locate_binary(crate::config::paths::get_ffmpeg_bin_name())
+        .and_then(|(p, _)| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(get_bin_dir);
     args.push("--ffmpeg-location".to_string());
-    args.push(bin_dir.to_string_lossy().to_string());
+    args.push(ffmpeg_loc.to_string_lossy().to_string());
 
     // 2. Output template
     let base_dir = match &options.output_dir {

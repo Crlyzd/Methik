@@ -1,17 +1,19 @@
 # Architecture & Development Rules for Methik
 
-## 1. Portability & AppData Isolation
+## 1. Portability & Shared Library Architecture
 - **100% Zero-Config Portability**: The user is never forced to install Python, `yt-dlp`, or `ffmpeg` manually.
-- **AppData Directory Layout**:
-  - Binaries: `%APPDATA%/Methik/bin/yt-dlp.exe`, `%APPDATA%/Methik/bin/ffmpeg.exe`, `%APPDATA%/Methik/bin/ffprobe.exe`
-  - Settings: `%APPDATA%/Methik/config/settings.json`
-  - Logs: `%APPDATA%/Methik/logs/`
+- **Directory Layout**:
+  - Shared Binaries (`yt-dlp`, `ffmpeg`, `ffprobe`, `deno`): `%LOCALAPPDATA%/curlyzed/bin/` (and `%LOCALAPPDATA%/curlyzed/`)
+  - Isolated Settings: `%APPDATA%/Methik/config/settings.json`
+  - Isolated Logs: `%APPDATA%/Methik/logs/`
+  - Legacy AppData Fallback: `%APPDATA%/Methik/bin/`
 - **Resolution Order**:
-  1. `%APPDATA%/Methik/bin/`
-  2. Executable relative `./bin/`
-  3. System `$PATH`
-- **Auto-Provisioner & Updater**: `engine::provisioner` fetches required standalone binaries directly from official GitHub releases on first launch or when triggered via the **Download Binaries** modal.
-- **Version Verification**: Minimum version check enforced for engines (`yt-dlp ≥ 2024.01`, `FFmpeg ≥ 5.0`).
+  1. `%LOCALAPPDATA%/curlyzed/bin/` and `%LOCALAPPDATA%/curlyzed/` (Shared curlyzed libraries)
+  2. `%APPDATA%/Methik/bin/` (Isolated Methik fallback)
+  3. Executable relative `./bin/` (Portable USB mode)
+  4. System `$PATH`
+- **Auto-Provisioner & Updater**: `engine::provisioner` fetches required standalone binaries directly into `%LOCALAPPDATA%/curlyzed/bin/` on first launch or when triggered via the **Download Binaries** modal.
+- **Version Verification**: Minimum version check enforced for engines (`yt-dlp ≥ 2024.01`, `FFmpeg ≥ 5.0`, `Deno ≥ 1.30.0`).
 
 ## 2. Integrated Features from Alitken Architecture
 - **Titlebar Pin Toggle (`Always on Top`)**: `toggle_always_on_top` Tauri command switching window pinned state with active glow in UI.

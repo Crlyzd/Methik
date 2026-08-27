@@ -1,4 +1,7 @@
-use crate::config::paths::{get_bin_dir, get_deno_bin_name, get_ffmpeg_bin_name, get_ytdlp_bin_name};
+use crate::config::paths::{
+    get_bin_dir, get_deno_bin_name, get_ffmpeg_bin_name, get_legacy_appdata_bin_dir,
+    get_shared_curlyzed_dir, get_ytdlp_bin_name,
+};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -16,7 +19,7 @@ pub struct DependencyStatus {
     pub path: Option<String>,
     pub is_valid: bool,
     pub min_version_required: String,
-    pub source: Option<String>, // "AppData", "Local Bin", "System PATH", or None
+    pub source: Option<String>, // "Shared (curlyzed)", "AppData (Methik)", "Local Bin", "System PATH", or None
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,23 +31,37 @@ pub struct SystemDependenciesReport {
 }
 
 /// Locates a binary checking in priority order:
-/// 1. %APPDATA%/Methik/bin/
-/// 2. Relative ./bin/
-/// 3. System $PATH
+/// 1. %LOCALAPPDATA%/curlyzed/bin/ (Shared bin)
+/// 2. %LOCALAPPDATA%/curlyzed/ (Shared root fallback)
+/// 3. %APPDATA%/Methik/bin/ (Methik isolated legacy fallback)
+/// 4. Relative ./bin/ (Portable USB mode)
+/// 5. System $PATH
 pub fn locate_binary(bin_name: &str) -> Option<(PathBuf, &'static str)> {
-    // Priority 1: AppData isolated directory
-    let appdata_bin = get_bin_dir().join(bin_name);
-    if appdata_bin.is_file() {
-        return Some((appdata_bin, "AppData"));
+    // Priority 1: Shared curlyzed/bin directory
+    let shared_bin = get_bin_dir().join(bin_name);
+    if shared_bin.is_file() {
+        return Some((shared_bin, "Shared (curlyzed)"));
     }
 
-    // Priority 2: Relative ./bin/
+    // Priority 2: Shared curlyzed root directory fallback
+    let shared_root = get_shared_curlyzed_dir().join(bin_name);
+    if shared_root.is_file() {
+        return Some((shared_root, "Shared (curlyzed)"));
+    }
+
+    // Priority 3: Methik AppData legacy fallback
+    let appdata_bin = get_legacy_appdata_bin_dir().join(bin_name);
+    if appdata_bin.is_file() {
+        return Some((appdata_bin, "AppData (Methik)"));
+    }
+
+    // Priority 4: Relative ./bin/
     let local_bin = PathBuf::from("bin").join(bin_name);
     if local_bin.is_file() {
         return Some((local_bin, "Local Bin"));
     }
 
-    // Priority 3: System PATH
+    // Priority 5: System PATH
     if let Ok(system_path) = which::which(bin_name) {
         return Some((system_path, "System PATH"));
     }
