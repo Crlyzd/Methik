@@ -92,6 +92,18 @@ pub enum AudioFormat {
     Aac,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum CookieSource {
+    None,
+    Chrome,
+    Firefox,
+    Edge,
+    Brave,
+    Opera,
+    Vivaldi,
+    CustomFile(String),
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DownloadOptions {
     pub item_id: Option<String>,
@@ -104,6 +116,7 @@ pub struct DownloadOptions {
     pub embed_thumbnail: bool,
     pub embed_metadata: bool,
     pub playlist_indices: Option<Vec<usize>>, // For selective batch downloading
+    pub cookie_source: Option<CookieSource>,
 }
 
 impl Default for DownloadOptions {
@@ -119,6 +132,7 @@ impl Default for DownloadOptions {
             embed_thumbnail: true,
             embed_metadata: true,
             playlist_indices: None,
+            cookie_source: None,
         }
     }
 }
@@ -129,6 +143,7 @@ pub struct UserSettings {
     pub default_quality: VideoQuality,
     pub audio_format: AudioFormat,
     pub dark_mode: bool,
+    pub cookie_source: Option<CookieSource>,
 }
 
 impl Default for UserSettings {
@@ -138,6 +153,8 @@ impl Default for UserSettings {
             default_quality: VideoQuality::FHD1080,
             audio_format: AudioFormat::Mp3,
             dark_mode: true,
+            cookie_source: None,
         }
     }
 }
+

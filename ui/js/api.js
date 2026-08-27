@@ -35,6 +35,7 @@ const Api = {
         return {
           ytdlp: { name: 'yt-dlp', is_installed: true, version: '2026.02.14', path: '%APPDATA%/Methik/bin/yt-dlp.exe', is_valid: true, min_version_required: '2024.01.01', source: 'AppData' },
           ffmpeg: { name: 'FFmpeg', is_installed: true, version: '7.1', path: '%APPDATA%/Methik/bin/ffmpeg.exe', is_valid: true, min_version_required: '5.0', source: 'AppData' },
+          deno: { name: 'Deno', is_installed: true, version: '2.2.3', path: '%APPDATA%/Methik/bin/deno.exe', is_valid: true, min_version_required: '1.30.0', source: 'AppData' },
           all_valid: true
         };
       case 'get_system_paths':
@@ -49,7 +50,8 @@ const Api = {
           download_dir: 'C:/Users/Default/Desktop',
           default_quality: 'FHD1080',
           audio_format: 'Mp3',
-          dark_mode: true
+          dark_mode: true,
+          cookie_source: 'None'
         };
       case 'save_user_settings_command':
         return true;
@@ -97,6 +99,8 @@ const Api = {
         return null;
       case 'minimize_window':
       case 'close_window':
+      case 'set_view_window_mode':
+      case 'cancel_provisioning':
         return null;
       case 'toggle_maximize_window':
         return false;

@@ -1,29 +1,72 @@
 use crate::config::paths::get_bin_dir;
-use crate::core::models::{AudioFormat, DownloadOptions, VideoQuality};
+use crate::core::models::{AudioFormat, CookieSource, DownloadOptions, VideoQuality};
 use std::path::PathBuf;
 
 pub const PROGRESS_PREFIX: &str = "[METHIK_PROG]";
 
+/// Appends cookies arguments based on configured CookieSource
+pub fn append_cookie_args(args: &mut Vec<String>, cookie_source: Option<&CookieSource>) {
+    if let Some(source) = cookie_source {
+        match source {
+            CookieSource::Chrome => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("chrome".to_string());
+            }
+            CookieSource::Firefox => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("firefox".to_string());
+            }
+            CookieSource::Edge => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("edge".to_string());
+            }
+            CookieSource::Brave => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("brave".to_string());
+            }
+            CookieSource::Opera => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("opera".to_string());
+            }
+            CookieSource::Vivaldi => {
+                args.push("--cookies-from-browser".to_string());
+                args.push("vivaldi".to_string());
+            }
+            CookieSource::CustomFile(path) if !path.trim().is_empty() => {
+                args.push("--cookies".to_string());
+                args.push(path.clone());
+            }
+            _ => {}
+        }
+    }
+}
+
 /// Builds CLI arguments for fetching single video metadata as JSON
-pub fn build_video_metadata_args(url: &str) -> Vec<String> {
-    vec![
+pub fn build_video_metadata_args(url: &str, cookie_source: Option<&CookieSource>) -> Vec<String> {
+    let mut args = vec![
         "--dump-json".to_string(),
         "--no-warnings".to_string(),
         "--no-playlist".to_string(),
         "--skip-download".to_string(),
-        url.to_string(),
-    ]
+        "--ignore-no-formats-error".to_string(),
+    ];
+    append_cookie_args(&mut args, cookie_source);
+    args.push(url.to_string());
+    args
 }
 
 /// Builds CLI arguments for flat playlist extraction
-pub fn build_playlist_metadata_args(url: &str) -> Vec<String> {
-    vec![
+pub fn build_playlist_metadata_args(url: &str, cookie_source: Option<&CookieSource>) -> Vec<String> {
+    let mut args = vec![
         "--flat-playlist".to_string(),
         "--dump-single-json".to_string(),
         "--no-warnings".to_string(),
         "--skip-download".to_string(),
-        url.to_string(),
-    ]
+        "--ignore-no-formats-error".to_string(),
+    ];
+    append_cookie_args(&mut args, cookie_source);
+    args.push(url.to_string());
+    args
 }
 
 /// Builds CLI arguments for video or audio download execution
@@ -108,7 +151,10 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         }
     }
 
-    // 6. Real-time progress output flags
+    // 6. Cookies Authentication
+    append_cookie_args(&mut args, options.cookie_source.as_ref());
+
+    // 7. Real-time progress output flags
     args.push("--no-colors".to_string());
     args.push("--progress".to_string());
     args.push("--newline".to_string());
@@ -118,7 +164,7 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         TAG = PROGRESS_PREFIX
     ));
 
-    // 7. General flags
+    // 8. General flags
     args.push("--no-warnings".to_string());
     args.push(options.url.clone());
 
@@ -131,10 +177,17 @@ mod tests {
 
     #[test]
     fn test_video_metadata_args() {
-        let args = build_video_metadata_args("https://youtube.com/watch?v=123");
+        let args = build_video_metadata_args("https://youtube.com/watch?v=123", None);
         assert!(args.contains(&"--dump-json".to_string()));
         assert!(args.contains(&"--no-playlist".to_string()));
         assert_eq!(args.last().unwrap(), "https://youtube.com/watch?v=123");
+    }
+
+    #[test]
+    fn test_video_metadata_args_with_cookies() {
+        let args = build_video_metadata_args("https://youtube.com/watch?v=123", Some(&CookieSource::Chrome));
+        assert!(args.contains(&"--cookies-from-browser".to_string()));
+        assert!(args.contains(&"chrome".to_string()));
     }
 
     #[test]
@@ -143,11 +196,15 @@ mod tests {
             url: "https://youtube.com/watch?v=123".to_string(),
             audio_only: true,
             audio_format: Some(AudioFormat::Flac),
+            cookie_source: Some(CookieSource::Edge),
             ..Default::default()
         };
         let args = build_download_args(&opts);
         assert!(args.contains(&"-x".to_string()));
         assert!(args.contains(&"flac".to_string()));
         assert!(args.contains(&"--ffmpeg-location".to_string()));
+        assert!(args.contains(&"--cookies-from-browser".to_string()));
+        assert!(args.contains(&"edge".to_string()));
     }
 }
+

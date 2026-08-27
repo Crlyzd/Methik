@@ -6,12 +6,12 @@ pub mod engine;
 use commands::download::{download_playlist, download_queue, download_video};
 use commands::metadata::{get_playlist_info, get_video_info};
 use commands::system::{
-    check_system_dependencies, get_system_paths, get_user_settings, open_appdata_folder,
-    open_logs_folder, open_url, provision_dependencies, save_user_settings_command,
-    select_download_folder, uninstall_binaries,
+    cancel_provisioning, check_system_dependencies, get_system_paths, get_user_settings,
+    open_appdata_folder, open_logs_folder, open_url, provision_dependencies,
+    save_user_settings_command, select_download_folder, uninstall_binaries,
 };
 use commands::window::{
-    close_window, minimize_window, toggle_always_on_top, toggle_maximize_window,
+    close_window, minimize_window, set_view_window_mode, toggle_always_on_top, toggle_maximize_window,
 };
 
 /// Main entry point to initialize application directories and launch the Tauri app.
@@ -25,6 +25,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             check_system_dependencies,
             provision_dependencies,
+            cancel_provisioning,
             open_appdata_folder,
             open_logs_folder,
             open_url,
@@ -41,7 +42,8 @@ pub fn run() {
             toggle_always_on_top,
             minimize_window,
             toggle_maximize_window,
-            close_window
+            close_window,
+            set_view_window_mode
         ])
         .setup(|_app| {
             println!(

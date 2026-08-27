@@ -8,6 +8,7 @@ const App = {
     isPinned: false,
     isDownloading: false,
     downloadDir: 'Desktop',
+    cookieSource: 'None',
     dependencies: null,
     theme: 'dark',
     initialized: false,
@@ -25,6 +26,15 @@ const App = {
   },
 
   setupEventListeners() {
+    // Global Error & Promise Rejection Handlers (Log to console without blocking UI)
+    window.addEventListener('error', (event) => {
+      console.error('[Methik Error Handler]', event.error || event.message);
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('[Methik Unhandled Rejection]', event.reason);
+    });
+
     // Hero URL input Enter key
     const heroInput = document.getElementById('heroUrlInput');
     if (heroInput) {
@@ -47,11 +57,79 @@ const App = {
         this.closeAllDropdowns();
       }
     });
+
+    // Click outside modal box on modal overlay backdrop to close
+    document.querySelectorAll('.modal-overlay').forEach((overlay) => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (overlay.id === 'provisionModal') {
+            App.promptCancelProvisioning();
+          } else {
+            App.closeModal(overlay.id);
+          }
+        }
+      });
+    });
+  },
+
+  toggleCookieDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('cookieDropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('open');
+    this.closeAllDropdowns();
+    if (!isOpen) {
+      dropdown.classList.add('open');
+    }
+  },
+
+  selectCookieSource(value, label) {
+    this.state.cookieSource = value;
+    const labelEl = document.getElementById('selectedCookieLabel');
+    if (labelEl) labelEl.textContent = label || value;
+
+    // Update active state in menu
+    const menuEl = document.getElementById('cookieMenu');
+    if (menuEl) {
+      menuEl.querySelectorAll('.glass-dropdown-item').forEach((item) => {
+        const text = item.textContent.trim();
+        item.classList.toggle('active', text.includes(label) || text.includes(value));
+      });
+    }
+
+    this.closeAllDropdowns();
+    this.saveCurrentSettings();
+  },
+
+  openCookieSettings() {
+    this.closeModal('errorModal');
+    this.openModal('settingsModal');
+    setTimeout(() => {
+      const el = document.getElementById('cookieDropdown');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  },
+
+  async saveCurrentSettings() {
+    try {
+      await Api.invoke('save_user_settings_command', {
+        settings: {
+          download_dir: this.state.downloadDir,
+          default_quality: 'FHD1080',
+          audio_format: 'Mp3',
+          dark_mode: this.state.theme === 'dark',
+          cookie_source: this.state.cookieSource === 'None' ? null : this.state.cookieSource,
+        },
+      });
+    } catch (e) {
+      console.warn('Failed to persist user settings:', e);
+    }
   },
 
   getQualityLabel(val) {
     switch (val) {
       case '4k': return '4K UHD (MP4)';
+      case '2k': return '2K QHD (MP4)';
       case '1080p': return '1080p FHD (MP4)';
       case '720p': return '720p HD (MP4)';
       case '480p': return '480p SD (MP4)';
@@ -59,6 +137,69 @@ const App = {
       case 'audio_flac': return 'Audio (FLAC Lossless)';
       default: return '1080p FHD (MP4)';
     }
+  },
+
+  extractAvailableQualities(formats) {
+    let qualities = [];
+    if (formats && Array.isArray(formats) && formats.length > 0) {
+      const heights = new Set();
+      formats.forEach((f) => {
+        if (f.resolution) {
+          const match = f.resolution.match(/(\d+)x(\d+)/);
+          if (match) {
+            heights.add(parseInt(match[2], 10));
+          }
+        }
+      });
+
+      if (Array.from(heights).some((h) => h >= 2160)) qualities.push('4k');
+      if (Array.from(heights).some((h) => h >= 1440 && h < 2160)) qualities.push('2k');
+      if (Array.from(heights).some((h) => h >= 1080 && h < 1440)) qualities.push('1080p');
+      if (Array.from(heights).some((h) => h >= 720 && h < 1080)) qualities.push('720p');
+      if (Array.from(heights).some((h) => h >= 480 && h < 720)) qualities.push('480p');
+    }
+
+    if (qualities.length === 0) {
+      qualities = ['1080p', '720p', '480p'];
+    }
+
+    qualities.push('audio_mp3', 'audio_flac');
+    return qualities;
+  },
+
+  renderDropdownItems(item) {
+    const qualities = item.availableQualities || ['4k', '2k', '1080p', '720p', '480p', 'audio_mp3', 'audio_flac'];
+    const videoQualities = qualities.filter((q) => !q.startsWith('audio_'));
+    const audioQualities = qualities.filter((q) => q.startsWith('audio_'));
+
+    let html = '';
+    videoQualities.forEach((q) => {
+      const active = item.selectedQuality === q ? 'active' : '';
+      const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      html += `
+        <div class="glass-dropdown-item ${active}" onclick="App.selectQuality('${item.id}', '${q}', event)">
+          <span>${this.getQualityLabel(q)}</span>
+          ${checkIcon}
+        </div>
+      `;
+    });
+
+    if (videoQualities.length > 0 && audioQualities.length > 0) {
+      html += '<div class="glass-dropdown-divider"></div>';
+    }
+
+    audioQualities.forEach((q) => {
+      const active = item.selectedQuality === q ? 'active' : '';
+      const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      html += `
+        <div class="glass-dropdown-item ${active}" onclick="App.selectQuality('${item.id}', '${q}', event)">
+          <span>${this.getQualityLabel(q)}</span>
+          ${checkIcon}
+        </div>
+      `;
+    });
+
+    return html;
   },
 
   toggleDropdown(id, event) {
@@ -74,7 +215,7 @@ const App = {
   },
 
   closeAllDropdowns() {
-    document.querySelectorAll('.glass-dropdown.open').forEach((el) => {
+    document.querySelectorAll('.glass-dropdown.open, .format-dropdown.open').forEach((el) => {
       el.classList.remove('open');
     });
   },
@@ -109,14 +250,7 @@ const App = {
     } catch (_) {}
 
     if (persist) {
-      Api.invoke('save_user_settings_command', {
-        settings: {
-          download_dir: this.state.downloadDir,
-          default_quality: 'FHD1080',
-          audio_format: 'Mp3',
-          dark_mode: this.state.theme === 'dark',
-        },
-      }).catch((e) => console.warn('Failed to persist theme setting:', e));
+      this.saveCurrentSettings();
     }
   },
 
@@ -137,6 +271,21 @@ const App = {
         }
         if (typeof settings.dark_mode === 'boolean') {
           this.setTheme(settings.dark_mode ? 'dark' : 'light', false);
+        }
+        if (settings.cookie_source) {
+          const cookieVal = typeof settings.cookie_source === 'string' ? settings.cookie_source : 'None';
+          this.state.cookieSource = cookieVal;
+          const labelEl = document.getElementById('selectedCookieLabel');
+          if (labelEl) {
+            labelEl.textContent = cookieVal === 'None' ? 'None (Default)' : cookieVal;
+          }
+          const menuEl = document.getElementById('cookieMenu');
+          if (menuEl) {
+            menuEl.querySelectorAll('.glass-dropdown-item').forEach((item) => {
+              const text = item.textContent.trim();
+              item.classList.toggle('active', text.includes(cookieVal));
+            });
+          }
         }
       }
     } catch (e) {
@@ -258,6 +407,8 @@ const App = {
       } else {
         const meta = await Api.invoke('get_video_info', { url });
         if (meta) {
+          const availableQualities = this.extractAvailableQualities(meta.formats);
+          const defaultQuality = availableQualities.includes('1080p') ? '1080p' : (availableQualities.find(q => !q.startsWith('audio_')) || '1080p');
           this.addQueueItem({
             id: 'vid_' + (meta.id || Math.random().toString(36).substring(7)),
             url: meta.webpage_url || url,
@@ -266,7 +417,8 @@ const App = {
             duration: meta.formatted_duration || '--:--',
             channel: meta.channel || 'YouTube',
             views: meta.view_count ? this.formatViews(meta.view_count) : '',
-            selectedQuality: '1080p',
+            availableQualities: availableQualities,
+            selectedQuality: defaultQuality,
             checked: true,
             status: 'ready',
             progress: 0,
@@ -279,7 +431,11 @@ const App = {
       if (inputEl) inputEl.value = '';
     } catch (err) {
       console.error('Failed to analyze stream:', err);
-      alert('Error fetching stream info: ' + err);
+      this.showError({
+        title: 'Stream Analysis Failed',
+        message: 'Unable to query metadata for the provided URL.',
+        details: typeof err === 'string' ? err : (err && err.message ? err.message : JSON.stringify(err, null, 2)),
+      });
     } finally {
       if (btnEl) btnEl.disabled = false;
       if (btnTextEl) btnTextEl.textContent = defaultBtnText;
@@ -300,6 +456,9 @@ const App = {
     const listEl = document.getElementById('queueList');
 
     const hasItems = this.state.queue.length > 0;
+
+    // Window sizing mode: Fixed 500x500 for Hero, Resizable (min 500x500) for Queue
+    Api.invoke('set_view_window_mode', { mode: hasItems ? 'queue' : 'hero' });
 
     // View state transitions: Clean Hero Front Page vs Active Queue View
     if (heroView) heroView.style.display = hasItems ? 'none' : 'flex';
@@ -351,27 +510,7 @@ const App = {
                   <svg class="svg-icon svg-stroke arrow-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="glass-dropdown-menu">
-                  <div class="glass-dropdown-item ${item.selectedQuality === '1080p' ? 'active' : ''}" onclick="App.selectQuality('${item.id}', '1080p', event)">
-                    <span>1080p FHD (MP4)</span>
-                    ${item.selectedQuality === '1080p' ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                  </div>
-                  <div class="glass-dropdown-item ${item.selectedQuality === '720p' ? 'active' : ''}" onclick="App.selectQuality('${item.id}', '720p', event)">
-                    <span>720p HD (MP4)</span>
-                    ${item.selectedQuality === '720p' ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                  </div>
-                  <div class="glass-dropdown-item ${item.selectedQuality === '480p' ? 'active' : ''}" onclick="App.selectQuality('${item.id}', '480p', event)">
-                    <span>480p SD (MP4)</span>
-                    ${item.selectedQuality === '480p' ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                  </div>
-                  <div class="glass-dropdown-divider"></div>
-                  <div class="glass-dropdown-item ${item.selectedQuality === 'audio_mp3' ? 'active' : ''}" onclick="App.selectQuality('${item.id}', 'audio_mp3', event)">
-                    <span>Audio (MP3 320k)</span>
-                    ${item.selectedQuality === 'audio_mp3' ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                  </div>
-                  <div class="glass-dropdown-item ${item.selectedQuality === 'audio_flac' ? 'active' : ''}" onclick="App.selectQuality('${item.id}', 'audio_flac', event)">
-                    <span>Audio (FLAC Lossless)</span>
-                    ${item.selectedQuality === 'audio_flac' ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                  </div>
+                  ${this.renderDropdownItems(item)}
                 </div>
               </div>
 
@@ -454,7 +593,11 @@ const App = {
 
   clearQueue() {
     if (this.state.isDownloading) {
-      alert('Cannot clear queue while download is in progress.');
+      this.showError({
+        title: 'Queue Action Restricted',
+        message: 'Cannot clear queue while a download is actively in progress.',
+        details: 'Active downloads must finish or complete before resetting the batch queue.',
+      });
       return;
     }
     this.state.queue = [];
@@ -497,6 +640,7 @@ const App = {
       let audioFormat = 'Mp3';
 
       if (item.selectedQuality === '4k') quality = 'UHD4K';
+      else if (item.selectedQuality === '2k') quality = 'QHD2K';
       else if (item.selectedQuality === '1080p') quality = 'FHD1080';
       else if (item.selectedQuality === '720p') quality = 'HD720';
       else if (item.selectedQuality === '480p') quality = 'SD480';
@@ -544,7 +688,11 @@ const App = {
       await Api.invoke('download_queue', { items, onProgress });
     } catch (err) {
       console.error('Queue download failed:', err);
-      alert('Download error: ' + err);
+      this.showError({
+        title: 'Download Failed',
+        message: 'An error occurred while downloading items in the queue.',
+        details: typeof err === 'string' ? err : (err && err.message ? err.message : JSON.stringify(err, null, 2)),
+      });
     } finally {
       this.state.isDownloading = false;
       this.updateSummary();
@@ -651,13 +799,16 @@ const App = {
     try {
       const ytdlpLabel = document.getElementById('ytdlpVersionLabel');
       const ffmpegLabel = document.getElementById('ffmpegVersionLabel');
+      const denoLabel = document.getElementById('denoVersionLabel');
       const ytdlpBadge = document.getElementById('ytdlpBadge');
       const ffmpegBadge = document.getElementById('ffmpegBadge');
+      const denoBadge = document.getElementById('denoBadge');
       const banner = document.getElementById('depWarningBanner');
 
       if (forceRefresh) {
         if (ytdlpLabel) ytdlpLabel.textContent = 'Checking...';
         if (ffmpegLabel) ffmpegLabel.textContent = 'Checking...';
+        if (denoLabel) denoLabel.textContent = 'Checking...';
       }
 
       const report = await Api.invoke('check_system_dependencies');
@@ -676,6 +827,14 @@ const App = {
         if (ffmpegBadge) {
           ffmpegBadge.className = report.ffmpeg.is_valid ? 'badge-valid' : 'badge-missing';
           ffmpegBadge.textContent = report.ffmpeg.is_valid ? 'Valid' : 'Missing';
+        }
+      }
+
+      if (report && report.deno) {
+        if (denoLabel) denoLabel.textContent = report.deno.is_installed ? report.deno.version : 'Missing';
+        if (denoBadge) {
+          denoBadge.className = report.deno.is_valid ? 'badge-valid' : 'badge-missing';
+          denoBadge.textContent = report.deno.is_valid ? 'Valid' : 'Missing';
         }
       }
 
@@ -715,12 +874,103 @@ const App = {
     }
   },
 
+  _provisionConfirmResolver: null,
+
+  requestProvisionConfirmation(report) {
+    return new Promise((resolve) => {
+      this._provisionConfirmResolver = resolve;
+
+      const listEl = document.getElementById('provisionConfirmEngineList');
+      const btnTextEl = document.getElementById('provisionConfirmBtnText');
+      const locationTextEl = document.getElementById('provisionConfirmLocationText');
+
+      let missingItems = [];
+      let totalEstMB = 0;
+
+      if (!report || !report.ytdlp || !report.ytdlp.is_valid) {
+        missingItems.push({
+          name: 'yt-dlp',
+          desc: 'Metadata analyzer and multi-stream downloader',
+          color: 'var(--accent-cyan)',
+          icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+          sizeMB: 15,
+        });
+        totalEstMB += 15;
+      }
+
+      if (!report || !report.ffmpeg || !report.ffmpeg.is_valid) {
+        missingItems.push({
+          name: 'FFmpeg',
+          desc: 'High-resolution 4K video merging and audio converter',
+          color: 'var(--accent-violet)',
+          icon: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+          sizeMB: 120,
+        });
+        totalEstMB += 120;
+      }
+
+      if (!report || !report.deno || !report.deno.is_valid) {
+        missingItems.push({
+          name: 'Deno',
+          desc: 'JavaScript engine for YouTube bot-challenge solver',
+          color: 'var(--status-valid)',
+          icon: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+          sizeMB: 35,
+        });
+        totalEstMB += 35;
+      }
+
+      if (listEl) {
+        listEl.innerHTML = missingItems
+          .map(
+            (item) => `
+          <div class="confirm-engine-item">
+            <svg class="svg-icon svg-stroke" style="width:14px; height:14px; color: ${item.color};" viewBox="0 0 24 24">${item.icon}</svg>
+            <div class="confirm-engine-details">
+              <strong>${item.name}</strong>
+              <span>${item.desc}</span>
+            </div>
+          </div>`
+          )
+          .join('');
+      }
+
+      if (btnTextEl) {
+        const count = missingItems.length;
+        const nameText = count === 1 ? missingItems[0].name : `${count} Missing Components`;
+        btnTextEl.textContent = `Download & Install ${nameText} (~${totalEstMB} MB)`;
+      }
+
+      if (locationTextEl) {
+        locationTextEl.innerHTML = `Installed isolated into <code>%APPDATA%/Methik/bin</code> (~${totalEstMB} MB). No system path modifications.`;
+      }
+
+      this.openModal('provisionConfirmModal');
+    });
+  },
+
+  resolveProvisionConfirmation(confirmed) {
+    if (this._provisionConfirmResolver) {
+      const r = this._provisionConfirmResolver;
+      this._provisionConfirmResolver = null;
+      r(confirmed);
+    }
+    const el = document.getElementById('provisionConfirmModal');
+    if (el) el.classList.remove('active');
+  },
+
   async ensureDependenciesReady() {
     try {
       const report = await Api.invoke('check_system_dependencies');
       this.state.dependencies = report;
       if (report && report.all_valid) {
         return true;
+      }
+
+      // Prompt the user with only the missing components
+      const confirmed = await this.requestProvisionConfirmation(report);
+      if (!confirmed) {
+        return false;
       }
 
       // Automatically launch the Frosted Glass Provisioning Modal
@@ -783,12 +1033,33 @@ const App = {
       }, 1200);
       return true;
     } catch (e) {
+      const errStr = String(e);
+      if (errStr.includes('cancelled') || errStr.includes('canceled') || errStr.includes('Canceled')) {
+        console.log('[Methik] Provisioning cancelled by user.');
+        this.closeModal('provisionModal');
+        return false;
+      }
       if (provTitle) provTitle.textContent = 'Download Failed';
-      if (provSubtitle) provSubtitle.textContent = String(e);
+      if (provSubtitle) provSubtitle.textContent = errStr;
       if (provSpinner) provSpinner.style.display = 'none';
       if (provFill) provFill.style.background = 'var(--status-danger)';
       return false;
     }
+  },
+
+  promptCancelProvisioning() {
+    this.openModal('cancelProvisionConfirmModal');
+  },
+
+  async executeCancelProvisioning() {
+    try {
+      await Api.invoke('cancel_provisioning');
+    } catch (e) {
+      console.warn('cancel_provisioning error:', e);
+    }
+    this.closeModal('cancelProvisionConfirmModal');
+    this.closeModal('provisionModal');
+    await this.checkDependencies();
   },
 
   async togglePin() {
@@ -885,6 +1156,55 @@ const App = {
   closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
+    if (id === 'provisionConfirmModal' && this._provisionConfirmResolver) {
+      const r = this._provisionConfirmResolver;
+      this._provisionConfirmResolver = null;
+      r(false);
+    }
+  },
+
+  showError({ title, message, details }) {
+    const modalTitle = document.getElementById('errorModalTitle');
+    const modalSubtitle = document.getElementById('errorModalSubtitle');
+    const modalLog = document.getElementById('errorModalLogText');
+    const mitigationCard = document.getElementById('errorMitigationCard');
+
+    if (modalTitle) modalTitle.textContent = title || 'Operation Failed';
+    if (modalSubtitle) modalSubtitle.textContent = message || 'An error occurred while processing your request';
+
+    const detailsStr = details
+      ? (typeof details === 'string' ? details : JSON.stringify(details, null, 2))
+      : 'No detailed diagnostic log available.';
+    if (modalLog) modalLog.textContent = detailsStr;
+
+    // Smart bot check / cookies challenge detection
+    const isBotChallenge = /sign in to confirm you'?re not a bot|--cookies|cookie/i.test(detailsStr);
+    if (mitigationCard) {
+      mitigationCard.style.display = isBotChallenge ? 'flex' : 'none';
+    }
+
+    this.openModal('errorModal');
+  },
+
+  copyErrorLog() {
+    const logEl = document.getElementById('errorModalLogText');
+    const btn = document.getElementById('btnCopyErrorLog');
+    const btnText = document.getElementById('btnCopyLogText');
+    if (!logEl) return;
+
+    const textToCopy = logEl.textContent || '';
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      if (btn && btnText) {
+        btn.classList.add('copied');
+        btnText.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btnText.textContent = 'Copy Log';
+        }, 2000);
+      }
+    }).catch((err) => {
+      console.error('Failed to copy error log:', err);
+    });
   },
 
   formatViews(count) {

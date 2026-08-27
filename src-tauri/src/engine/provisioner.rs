@@ -1,20 +1,37 @@
-use crate::config::paths::{get_bin_dir, get_ffmpeg_bin_path, get_ffprobe_bin_path, get_ytdlp_bin_path};
+use crate::config::paths::{
+    get_bin_dir, get_deno_bin_path, get_ffmpeg_bin_path, get_ffprobe_bin_path, get_ytdlp_bin_path,
+};
 use crate::core::error::AppError;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+static PROVISION_CANCEL_FLAG: AtomicBool = AtomicBool::new(false);
+
+pub fn set_provision_cancelled(val: bool) {
+    PROVISION_CANCEL_FLAG.store(val, Ordering::SeqCst);
+}
+
+pub fn is_provision_cancelled() -> bool {
+    PROVISION_CANCEL_FLAG.load(Ordering::SeqCst)
+}
+
 pub const YTDLP_WINDOWS_URL: &str =
-    "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
+    "https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp.exe";
 pub const YTDLP_UNIX_URL: &str =
-    "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";
+    "https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp";
 
 // Minimal portable FFmpeg builds for Windows
 pub const FFMPEG_WINDOWS_ZIP_URL: &str =
     "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
+
+// Portable Deno JS challenge solver binary for Windows
+pub const DENO_WINDOWS_ZIP_URL: &str =
+    "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProvisionProgress {
@@ -97,6 +114,44 @@ where
     Ok(())
 }
 
+/// Downloads and unpacks Deno JS solver into %APPDATA%/Methik/bin/
+pub async fn provision_deno<F>(progress_callback: Arc<F>) -> Result<(), AppError>
+where
+    F: Fn(ProvisionProgress) + Send + Sync + 'static,
+{
+    let url = DENO_WINDOWS_ZIP_URL;
+    let bin_dir = get_bin_dir();
+    let zip_temp_path = bin_dir.join("deno_temp.zip");
+
+    download_file_with_progress(url, &zip_temp_path, "Deno", progress_callback.clone()).await?;
+
+    progress_callback(ProvisionProgress {
+        binary: "Deno".to_string(),
+        percent: 99.0,
+        downloaded_bytes: 0,
+        total_bytes: 0,
+        speed: None,
+        status: "Extracting binaries...".to_string(),
+    });
+
+    // Extract deno.exe from zip
+    extract_deno_from_zip(&zip_temp_path, &bin_dir)?;
+
+    // Cleanup temp zip archive
+    let _ = fs::remove_file(&zip_temp_path);
+
+    progress_callback(ProvisionProgress {
+        binary: "Deno".to_string(),
+        percent: 100.0,
+        downloaded_bytes: 0,
+        total_bytes: 0,
+        speed: None,
+        status: "Completed".to_string(),
+    });
+
+    Ok(())
+}
+
 /// Downloads a remote URL to a local destination while streaming progress updates
 async fn download_file_with_progress<F>(
     url: &str,
@@ -124,6 +179,12 @@ where
     let mut current_speed = String::from("0.0 MB/s");
 
     while let Some(chunk_res) = stream.next().await {
+        if is_provision_cancelled() {
+            drop(file);
+            let _ = fs::remove_file(target_path);
+            return Err(AppError::Canceled);
+        }
+
         let chunk = chunk_res?;
         file.write_all(&chunk)?;
         downloaded_bytes += chunk.len() as u64;
@@ -155,6 +216,12 @@ where
                 status: "Downloading...".to_string(),
             });
         }
+    }
+
+    if is_provision_cancelled() {
+        drop(file);
+        let _ = fs::remove_file(target_path);
+        return Err(AppError::Canceled);
     }
 
     file.flush()?;
@@ -196,11 +263,41 @@ fn extract_ffmpeg_from_zip(zip_path: &Path, target_dir: &Path) -> Result<(), App
     Ok(())
 }
 
+/// Unzips deno.exe from the downloaded archive into target directory
+fn extract_deno_from_zip(zip_path: &Path, target_dir: &Path) -> Result<(), AppError> {
+    let zip_file = File::open(zip_path)?;
+    let mut archive = zip::ZipArchive::new(zip_file)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let enclosed_name = match file.enclosed_name() {
+            Some(path) => path.to_owned(),
+            None => continue,
+        };
+
+        let file_name = enclosed_name
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("");
+
+        if file_name.eq_ignore_ascii_case("deno.exe")
+            || file_name.eq_ignore_ascii_case("deno")
+        {
+            let dest_path = target_dir.join(file_name);
+            let mut out = File::create(dest_path)?;
+            std::io::copy(&mut file, &mut out)?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Uninstalls all isolated binaries from AppData directory
 pub fn uninstall_appdata_binaries() -> Result<(), AppError> {
     let ytdlp = get_ytdlp_bin_path();
     let ffmpeg = get_ffmpeg_bin_path();
     let ffprobe = get_ffprobe_bin_path();
+    let deno = get_deno_bin_path();
 
     if ytdlp.exists() {
         let _ = fs::remove_file(ytdlp);
@@ -210,6 +307,9 @@ pub fn uninstall_appdata_binaries() -> Result<(), AppError> {
     }
     if ffprobe.exists() {
         let _ = fs::remove_file(ffprobe);
+    }
+    if deno.exists() {
+        let _ = fs::remove_file(deno);
     }
 
     Ok(())

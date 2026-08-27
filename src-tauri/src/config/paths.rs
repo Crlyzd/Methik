@@ -55,6 +55,15 @@ pub fn get_ffprobe_bin_name() -> &'static str {
     }
 }
 
+/// Returns the platform-specific binary name for deno
+pub fn get_deno_bin_name() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "deno.exe"
+    } else {
+        "deno"
+    }
+}
+
 /// Returns the full path to the isolated yt-dlp binary in AppData
 pub fn get_ytdlp_bin_path() -> PathBuf {
     get_bin_dir().join(get_ytdlp_bin_name())
@@ -68,6 +77,11 @@ pub fn get_ffmpeg_bin_path() -> PathBuf {
 /// Returns the full path to the isolated ffprobe binary in AppData
 pub fn get_ffprobe_bin_path() -> PathBuf {
     get_bin_dir().join(get_ffprobe_bin_name())
+}
+
+/// Returns the full path to the isolated deno binary in AppData
+pub fn get_deno_bin_path() -> PathBuf {
+    get_bin_dir().join(get_deno_bin_name())
 }
 
 /// Returns the path to the settings JSON file

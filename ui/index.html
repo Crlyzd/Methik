@@ -64,7 +64,7 @@
     <section class="banner-warning" id="depWarningBanner" style="display: none;">
       <div class="banner-content">
         <svg class="svg-icon svg-stroke" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span><strong>Dependencies Required:</strong> Download portable <code>yt-dlp</code> & <code>ffmpeg</code> into AppData to enable downloads.</span>
+        <span><strong>Dependencies Required:</strong> Download portable <code>yt-dlp</code>, <code>FFmpeg</code> & <code>Deno</code> to enable downloads.</span>
       </div>
       <button class="btn-banner" onclick="App.startProvisioning()">
         Auto-Download Binaries
@@ -226,6 +226,36 @@
         </div>
       </div>
 
+      <!-- YouTube Authentication / Cookies Section -->
+      <div>
+        <div class="theme-section-title">YouTube Authentication & Cookies</div>
+        <div class="engine-panel" style="padding: 10px 12px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; color: var(--text-main); font-weight: 500;">Browser Session Source</span>
+              <div class="glass-dropdown" id="cookieDropdown">
+                <button class="glass-dropdown-trigger" id="cookieTrigger" onclick="App.toggleCookieDropdown(event)" type="button" style="min-width: 145px; justify-content: space-between;">
+                  <span id="selectedCookieLabel">None (Default)</span>
+                  <svg class="svg-icon svg-stroke arrow-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="glass-dropdown-menu" id="cookieMenu" style="min-width: 155px; max-height: 180px; overflow-y: auto;">
+                  <div class="glass-dropdown-item active" onclick="App.selectCookieSource('None', 'None (Default)')">None (Default)</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Chrome', 'Google Chrome')">Google Chrome</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Edge', 'Microsoft Edge')">Microsoft Edge</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Firefox', 'Mozilla Firefox')">Mozilla Firefox</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Brave', 'Brave Browser')">Brave Browser</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Opera', 'Opera')">Opera</div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('Vivaldi', 'Vivaldi')">Vivaldi</div>
+                </div>
+              </div>
+            </div>
+            <p style="font-size: 10.5px; color: var(--text-dim); margin: 0; line-height: 1.35;">
+              Imports active cookies directly from your browser to bypass YouTube bot challenge (<em>"Sign in to confirm you're not a bot"</em>).
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Media Processing Engines Section -->
       <div>
         <div class="theme-section-title">Media Processing Engines</div>
@@ -246,6 +276,15 @@
               <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--accent-violet);" id="ffmpegVersionLabel">Checking...</span>
             </div>
             <div class="badge-valid" id="ffmpegBadge">Valid</div>
+          </div>
+
+          <div class="engine-row">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg class="svg-icon svg-stroke" style="width:15px; height:15px; color: var(--status-valid);" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Deno:</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--status-valid);" id="denoVersionLabel">Checking...</span>
+            </div>
+            <div class="badge-valid" id="denoBadge">Valid</div>
           </div>
 
           <!-- Primary Install/Update Button -->
@@ -341,13 +380,62 @@
           <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <span>Active Engine: Isolated AppData</span>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--status-valid);">(yt-dlp + FFmpeg)</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--status-valid);">(yt-dlp + FFmpeg + Deno)</span>
       </div>
 
       <!-- Technical Footer -->
       <div class="about-tech-footer">
         <span>Engine: Tauri v2 • Rust Tokio</span>
-        <span>Powered by yt-dlp & FFmpeg</span>
+        <span>Powered by yt-dlp, FFmpeg & Deno</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- PROVISION CONFIRMATION MODAL (Strict Zero Emoji & Glass)   -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="provisionConfirmModal">
+    <div class="modal-box confirm-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="confirm-icon-badge">
+            <svg class="svg-icon svg-stroke" style="width:20px; height:20px; color: var(--accent-cyan);" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Media Engines Required</h3>
+            <p class="modal-subtitle">Additional tools needed for parsing and downloading</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.resolveProvisionConfirmation(false)">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="confirm-modal-body">
+        <p class="confirm-desc">
+          Methik needs to download portable media processing binaries to inspect metadata, extract high-bitrate video/audio streams, and solve YouTube challenges:
+        </p>
+
+        <div class="confirm-engine-list" id="provisionConfirmEngineList">
+          <!-- Dynamically populated with only missing engines -->
+        </div>
+
+        <div class="confirm-location-note">
+          <svg class="svg-icon svg-stroke" style="width:13px; height:13px; color: var(--text-muted);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <span id="provisionConfirmLocationText">Installed isolated into <code>%APPDATA%/Methik/bin</code>. No system path modifications.</span>
+        </div>
+
+        <div class="confirm-modal-actions">
+          <button class="btn-confirm-cancel" onclick="App.resolveProvisionConfirmation(false)">Not Now</button>
+          <button class="btn-confirm-install" onclick="App.resolveProvisionConfirmation(true)">
+            <svg class="svg-icon svg-stroke" style="width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span id="provisionConfirmBtnText">Download & Install Missing</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -365,7 +453,7 @@
             <p class="modal-subtitle" id="provSubtitle">Downloading portable binaries into AppData...</p>
           </div>
         </div>
-        <button class="btn-close" onclick="App.closeModal('provisionModal')">
+        <button class="btn-close" onclick="App.promptCancelProvisioning()">
           <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -381,6 +469,106 @@
         <div class="provision-footer-meta">
           <span class="provision-meta-detail" id="provBytes">Preparing download...</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CANCEL PROVISION CONFIRMATION MODAL                        -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="cancelProvisionConfirmModal" style="z-index: 100000;">
+    <div class="modal-box cancel-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="cancel-icon-badge">
+            <svg class="svg-icon svg-stroke" style="width:20px; height:20px; color: var(--status-danger);" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Cancel Download?</h3>
+            <p class="modal-subtitle">Stop downloading dependencies and discard progress</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('cancelProvisionConfirmModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="cancel-modal-body">
+        <p class="cancel-desc">
+          Are you sure you want to stop downloading media dependencies? Any partially downloaded binary files will be discarded.
+        </p>
+        <div class="confirm-modal-actions">
+          <button class="btn-confirm-cancel" onclick="App.closeModal('cancelProvisionConfirmModal')">Continue Downloading</button>
+          <button class="btn-confirm-danger" onclick="App.executeCancelProvisioning()">
+            <svg class="svg-icon svg-stroke" style="width:14px; height:14px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Stop & Cancel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========================================================== -->
+  <!-- SLEEK GLASS ERROR MODAL (Strict Zero Emoji & Monochrome)   -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="errorModal">
+    <div class="modal-box error-modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="error-icon-badge">
+            <svg class="svg-icon svg-stroke" style="width:20px; height:20px; color: #ef4444;" viewBox="0 0 24 24">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title error-modal-title" id="errorModalTitle">Operation Failed</h3>
+            <p class="modal-subtitle" id="errorModalSubtitle">An error occurred while processing your request</p>
+          </div>
+        </div>
+        <button class="btn-close" onclick="App.closeModal('errorModal')">
+          <svg class="svg-icon svg-stroke" style="width:18px; height:18px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Context Mitigation Banner (Dynamic when cookie/bot or network issue detected) -->
+      <div class="error-mitigation-card" id="errorMitigationCard" style="display: none;">
+        <div class="mitigation-header">
+          <svg class="svg-icon svg-stroke" style="width:15px; height:15px; color: var(--accent-cyan);" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+          <span class="mitigation-title" id="mitigationTitle">Suggested Resolution</span>
+        </div>
+        <p class="mitigation-text" id="mitigationText">
+          YouTube requires session verification to bypass bot detection. Select your browser in Preferences to enable session cookies.
+        </p>
+        <div class="mitigation-actions">
+          <button class="btn-mitigation" id="btnMitigationAction" onclick="App.openCookieSettings()">
+            <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span id="btnMitigationLabel">Configure Browser Cookies</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Technical Log Terminal View -->
+      <div class="error-terminal-section">
+        <div class="error-terminal-header">
+          <span class="terminal-title">Diagnostic Logs</span>
+          <button class="btn-copy-log" id="btnCopyErrorLog" onclick="App.copyErrorLog()">
+            <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="btnCopyLogText">Copy Log</span>
+          </button>
+        </div>
+        <pre class="error-terminal-body" id="errorModalLogText">No detailed log available.</pre>
+      </div>
+
+      <!-- Modal Footer Controls -->
+      <div class="error-modal-footer">
+        <button class="btn-error-dismiss" onclick="App.closeModal('errorModal')">Dismiss</button>
       </div>
     </div>
   </div>

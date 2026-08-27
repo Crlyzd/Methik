@@ -8,11 +8,16 @@ use tauri::{AppHandle, Emitter};
 /// IPC command to execute a single video/audio download, emitting real-time progress events
 #[tauri::command]
 pub async fn download_video(
-    options: DownloadOptions,
+    mut options: DownloadOptions,
     app_handle: AppHandle,
 ) -> Result<(), String> {
     if options.url.trim().is_empty() {
         return Err("URL cannot be empty".to_string());
+    }
+
+    if options.cookie_source.is_none() {
+        let settings = crate::config::paths::load_user_settings();
+        options.cookie_source = settings.cookie_source;
     }
 
     let handle_for_progress = app_handle.clone();
@@ -28,11 +33,16 @@ pub async fn download_video(
 /// IPC command to execute batch playlist downloads with dual item & overall progress tracking
 #[tauri::command]
 pub async fn download_playlist(
-    options: DownloadOptions,
+    mut options: DownloadOptions,
     app_handle: AppHandle,
 ) -> Result<(), String> {
     if options.url.trim().is_empty() {
         return Err("Playlist URL cannot be empty".to_string());
+    }
+
+    if options.cookie_source.is_none() {
+        let settings = crate::config::paths::load_user_settings();
+        options.cookie_source = settings.cookie_source;
     }
 
     // 1. Fetch flat playlist metadata
@@ -113,12 +123,19 @@ use tauri::ipc::Channel;
 /// IPC command to execute a list of queue items sequentially, emitting per-item and overall progress
 #[tauri::command]
 pub async fn download_queue(
-    items: Vec<DownloadOptions>,
+    mut items: Vec<DownloadOptions>,
     on_progress: Channel<DownloadProgress>,
     app_handle: AppHandle,
 ) -> Result<(), String> {
     if items.is_empty() {
         return Err("Queue is empty".to_string());
+    }
+
+    let default_cookie = crate::config::paths::load_user_settings().cookie_source;
+    for opt in items.iter_mut() {
+        if opt.cookie_source.is_none() {
+            opt.cookie_source = default_cookie.clone();
+        }
     }
 
     let total_items = items.len();

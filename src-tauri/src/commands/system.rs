@@ -1,7 +1,8 @@
 use crate::config::paths::{get_appdata_dir, get_bin_dir, get_config_dir, get_logs_dir};
 use crate::engine::dependency::{check_all_dependencies, SystemDependenciesReport};
 use crate::engine::provisioner::{
-    provision_ffmpeg, provision_ytdlp, uninstall_appdata_binaries, ProvisionProgress,
+    provision_deno, provision_ffmpeg, provision_ytdlp, set_provision_cancelled,
+    uninstall_appdata_binaries, ProvisionProgress,
 };
 use serde::{Deserialize, Serialize};
 use std::process::Command;
@@ -24,12 +25,15 @@ pub fn check_system_dependencies() -> Result<SystemDependenciesReport, String> {
 
 use tauri::ipc::Channel;
 
-/// Automatically downloads and unpacks yt-dlp and FFmpeg into AppData, emitting progress events
+/// Automatically downloads and unpacks only missing/invalid dependencies (yt-dlp, FFmpeg, Deno) into AppData, emitting progress events
 #[tauri::command]
 pub async fn provision_dependencies(
     on_progress: Channel<ProvisionProgress>,
     app_handle: AppHandle,
 ) -> Result<SystemDependenciesReport, String> {
+    // Reset cancellation flag
+    set_provision_cancelled(false);
+
     let handle_for_progress = app_handle.clone();
     let channel_for_progress = on_progress.clone();
     let callback = Arc::new(move |progress: ProvisionProgress| {
@@ -37,18 +41,38 @@ pub async fn provision_dependencies(
         let _ = handle_for_progress.emit("provision-progress", progress);
     });
 
-    // Provision yt-dlp
-    provision_ytdlp(callback.clone())
-        .await
-        .map_err(|e| format!("Failed to provision yt-dlp: {}", e))?;
+    let current = check_all_dependencies();
 
-    // Provision FFmpeg
-    provision_ffmpeg(callback.clone())
-        .await
-        .map_err(|e| format!("Failed to provision FFmpeg: {}", e))?;
+    // Provision yt-dlp only if missing or invalid
+    if !current.ytdlp.is_valid {
+        provision_ytdlp(callback.clone())
+            .await
+            .map_err(|e| format!("Failed to provision yt-dlp: {}", e))?;
+    }
+
+    // Provision FFmpeg only if missing or invalid
+    if !current.ffmpeg.is_valid {
+        provision_ffmpeg(callback.clone())
+            .await
+            .map_err(|e| format!("Failed to provision FFmpeg: {}", e))?;
+    }
+
+    // Provision Deno (JS Challenge Solver) only if missing or invalid
+    if !current.deno.is_valid {
+        provision_deno(callback.clone())
+            .await
+            .map_err(|e| format!("Failed to provision Deno: {}", e))?;
+    }
 
     // Return refreshed dependencies report
     Ok(check_all_dependencies())
+}
+
+/// Cancels any active dependency provisioning download
+#[tauri::command]
+pub fn cancel_provisioning() -> Result<(), String> {
+    set_provision_cancelled(true);
+    Ok(())
 }
 
 /// Opens the %APPDATA%/Methik directory in OS file manager

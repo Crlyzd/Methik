@@ -1,4 +1,26 @@
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, LogicalSize, Manager, Size};
+
+/// Configures window resizability and sizing constraints for hero vs queue views
+#[tauri::command]
+pub fn set_view_window_mode(app_handle: AppHandle, mode: String) -> Result<(), String> {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        if mode == "hero" {
+            // Hero startup view: fixed compact 500x500
+            let _ = window.set_min_size(Some(Size::Logical(LogicalSize::new(500.0, 500.0))));
+            let _ = window.set_max_size(Some(Size::Logical(LogicalSize::new(500.0, 500.0))));
+            let _ = window.set_size(Size::Logical(LogicalSize::new(500.0, 500.0)));
+            let _ = window.set_resizable(false);
+        } else {
+            // Queue / active view: fully resizable with 500x500 min size
+            let _ = window.set_max_size(None::<Size>);
+            let _ = window.set_min_size(Some(Size::Logical(LogicalSize::new(500.0, 500.0))));
+            let _ = window.set_resizable(true);
+        }
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
 
 /// Toggles the window's Always On Top state
 #[tauri::command]
