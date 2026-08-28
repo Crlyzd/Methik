@@ -41,6 +41,8 @@ desktop.ini
 *.sublime-workspace
 
 # Agent & AI Tooling
+AGENTS.md
+GEMINI.md
 agents/
 .agents/
 .gemini/
