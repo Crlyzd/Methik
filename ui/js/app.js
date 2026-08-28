@@ -385,6 +385,22 @@ const App = {
     }
   },
 
+  async openMedia(itemId) {
+    try {
+      const item = this.state.queue.find((q) => q.id === itemId);
+      const videoId = (item && item.videoId) ? item.videoId : (itemId ? itemId.replace(/^(vid_|pl_)/, '') : '');
+      const title = item ? item.title : '';
+      await Api.invoke('open_media_file', {
+        itemId: itemId || '',
+        videoId: videoId || '',
+        title: title || '',
+        outputDir: this.state.downloadDir || null,
+      });
+    } catch (e) {
+      console.error('Failed to open media file:', e);
+    }
+  },
+
   async pasteHeroLink() {
     try {
       const text = await Api.readClipboard();
@@ -441,6 +457,7 @@ const App = {
           playlist.entries.forEach((entry) => {
             this.addQueueItem({
               id: 'pl_' + (entry.id || Math.random().toString(36).substring(7)),
+              videoId: entry.id || '',
               url: entry.url || url,
               title: entry.title || 'Playlist Track',
               thumbnail: entry.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60',
@@ -463,6 +480,7 @@ const App = {
           const defaultQuality = availableQualities.includes('1080p') ? '1080p' : (availableQualities.find(q => !q.startsWith('audio_')) || '1080p');
           this.addQueueItem({
             id: 'vid_' + (meta.id || Math.random().toString(36).substring(7)),
+            videoId: meta.id || '',
             url: meta.webpage_url || url,
             title: meta.title || 'YouTube Video',
             thumbnail: meta.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60',
@@ -537,9 +555,10 @@ const App = {
             </label>
 
             <!-- Video Thumbnail -->
-            <div class="tile-thumb">
+            <div class="tile-thumb ${item.status === 'finished' ? 'playable' : ''}" id="thumb-${item.id}" onclick="App.onThumbnailClick('${item.id}')">
               <img src="${item.thumbnail}" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60'">
               <span class="tile-duration-badge">${item.duration}</span>
+              ${item.status === 'finished' ? '<div class="tile-thumb-play"><svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>' : ''}
             </div>
 
             <!-- Video Meta -->
@@ -554,8 +573,14 @@ const App = {
               </div>
             </div>
 
-            <!-- Right Controls: Custom Frosted Glass Dropdown & Remove -->
-            <div class="tile-controls">
+            <!-- Right Controls: Custom Frosted Glass Dropdown, Open & Remove -->
+            <div class="tile-controls" id="controls-${item.id}">
+              ${item.status === 'finished' ? `
+                <button class="btn-tile-open" onclick="App.openMedia('${item.id}')" type="button" title="Open downloaded video">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>Open</span>
+                </button>
+              ` : ''}
               <div class="glass-dropdown" id="dropdown-${item.id}">
                 <button class="glass-dropdown-trigger" onclick="App.toggleDropdown('${item.id}', event)" type="button">
                   <span>${this.getQualityLabel(item.selectedQuality)}</span>
@@ -772,6 +797,13 @@ const App = {
     }
   },
 
+  onThumbnailClick(id) {
+    const item = this.state.queue.find((q) => q.id === id);
+    if (item && item.status === 'finished') {
+      this.openMedia(id);
+    }
+  },
+
   updateTileProgressDOM(item) {
     const fillEl = document.getElementById(`fill-${item.id}`);
     if (fillEl) {
@@ -801,6 +833,32 @@ const App = {
       const dot = statusGroup.querySelector('.status-dot');
       if (dot) {
         dot.className = `status-dot ${item.status}`;
+      }
+    }
+
+    if (item.status === 'finished') {
+      // Reveal Open button in tile controls if not already added
+      const controlsEl = document.getElementById(`controls-${item.id}`);
+      if (controlsEl && !controlsEl.querySelector('.btn-tile-open')) {
+        const btnOpen = document.createElement('button');
+        btnOpen.className = 'btn-tile-open';
+        btnOpen.type = 'button';
+        btnOpen.title = 'Open downloaded video';
+        btnOpen.onclick = () => this.openMedia(item.id);
+        btnOpen.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Open</span>';
+        controlsEl.insertBefore(btnOpen, controlsEl.firstChild);
+      }
+
+      // Add playable class and play icon to thumbnail
+      const thumbEl = document.getElementById(`thumb-${item.id}`);
+      if (thumbEl) {
+        thumbEl.classList.add('playable');
+        if (!thumbEl.querySelector('.tile-thumb-play')) {
+          const playOverlay = document.createElement('div');
+          playOverlay.className = 'tile-thumb-play';
+          playOverlay.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+          thumbEl.appendChild(playOverlay);
+        }
       }
     }
   },

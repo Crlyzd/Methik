@@ -804,6 +804,42 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   padding: 1px 3px;
   border-radius: 3px;
   color: #fff;
+  z-index: 2;
+}
+
+.tile-thumb.playable {
+  cursor: pointer;
+}
+
+.tile-thumb.playable:hover img {
+  opacity: 0.85;
+  transform: scale(1.04);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.tile-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tile-thumb.playable:hover .tile-thumb-play {
+  opacity: 1;
+}
+
+.tile-thumb-play svg {
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  fill: currentColor;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 .tile-details {
@@ -975,6 +1011,53 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
 @keyframes dropdownFadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-tile-open {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 5px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: var(--status-valid);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInOpenBtn 0.2s ease-out;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.12);
+}
+
+[data-theme="light"] .btn-tile-open {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #059669;
+}
+
+.btn-tile-open:hover {
+  background: rgba(16, 185, 129, 0.24);
+  border-color: var(--status-valid);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.38);
+  transform: translateY(-1px);
+}
+
+.btn-tile-open:active {
+  transform: translateY(0);
+}
+
+.btn-tile-open svg {
+  width: 9px;
+  height: 9px;
+  fill: currentColor;
+}
+
+@keyframes fadeInOpenBtn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .btn-tile-remove {

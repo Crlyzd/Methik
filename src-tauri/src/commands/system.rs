@@ -105,6 +105,79 @@ pub fn open_download_folder(path: Option<String>) -> Result<(), String> {
     open_folder_in_os(&target_path.to_string_lossy())
 }
 
+/// Opens a downloaded media file directly with the default OS media player, or falls back to opening the folder
+#[tauri::command]
+pub fn open_media_file(
+    item_id: Option<String>,
+    video_id: Option<String>,
+    title: Option<String>,
+    output_dir: Option<String>,
+) -> Result<(), String> {
+    let target_str = match output_dir {
+        Some(p) if !p.trim().is_empty() && p.trim() != "Desktop" => p,
+        _ => crate::config::paths::load_user_settings().download_dir,
+    };
+
+    let dir_path = std::path::PathBuf::from(&target_str);
+    if !dir_path.exists() {
+        let _ = std::fs::create_dir_all(&dir_path);
+    }
+
+    // Extract cleaned ID candidates (stripping UI prefixes like vid_ or pl_)
+    let mut candidates = Vec::new();
+    if let Some(vid) = &video_id {
+        let clean = vid.trim().trim_start_matches("vid_").trim_start_matches("pl_");
+        if !clean.is_empty() {
+            candidates.push(clean.to_string());
+        }
+    }
+    if let Some(iid) = &item_id {
+        let clean = iid.trim().trim_start_matches("vid_").trim_start_matches("pl_");
+        if !clean.is_empty() && !candidates.contains(&clean.to_string()) {
+            candidates.push(clean.to_string());
+        }
+    }
+
+    // Attempt to locate matching media file in download directory
+    if let Ok(entries) = std::fs::read_dir(&dir_path) {
+        let mut matched_files: Vec<(std::time::SystemTime, std::path::PathBuf)> = Vec::new();
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("").to_lowercase();
+
+                let matches_id = candidates.iter().any(|c| {
+                    let c_lower = c.to_lowercase();
+                    file_name.contains(&format!("[{}]", c_lower)) || file_name.contains(&c_lower)
+                });
+
+                let matches_title = if let Some(t) = &title {
+                    let t_trimmed = t.trim().to_lowercase();
+                    let prefix = if t_trimmed.len() > 15 { &t_trimmed[..15] } else { &t_trimmed };
+                    !prefix.is_empty() && file_name.contains(prefix)
+                } else {
+                    false
+                };
+
+                if matches_id || matches_title {
+                    let mtime = entry.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH);
+                    matched_files.push((mtime, path));
+                }
+            }
+        }
+
+        // Sort to pick the newest matching media file
+        matched_files.sort_by(|a, b| b.0.cmp(&a.0));
+        if let Some((_, best_path)) = matched_files.first() {
+            return open_file_in_os(&best_path.to_string_lossy());
+        }
+    }
+
+    // Graceful fallback to opening the containing download folder
+    open_folder_in_os(&dir_path.to_string_lossy())
+}
+
 /// Deletes binaries from %APPDATA%/Methik/bin
 #[tauri::command]
 pub fn uninstall_binaries() -> Result<SystemDependenciesReport, String> {
@@ -221,6 +294,31 @@ fn open_folder_in_os(path_str: &str) -> Result<(), String> {
             .arg(path_str)
             .spawn()
             .map_err(|e| format!("Failed to open file manager: {}", e))?;
+    }
+    Ok(())
+}
+
+fn open_file_in_os(path_str: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(["/c", "start", "", path_str])
+            .spawn()
+            .map_err(|e| format!("Failed to open file: {}", e))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(path_str)
+            .spawn()
+            .map_err(|e| format!("Failed to open file: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("xdg-open")
+            .arg(path_str)
+            .spawn()
+            .map_err(|e| format!("Failed to open file: {}", e))?;
     }
     Ok(())
 }
