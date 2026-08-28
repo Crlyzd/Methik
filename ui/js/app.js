@@ -253,6 +253,99 @@ const App = {
     return qualities;
   },
 
+  parseDurationToSeconds(str) {
+    if (!str || typeof str !== 'string' || str === '--:--') return 180;
+    const parts = str.split(':').map((p) => parseInt(p, 10));
+    if (parts.some(isNaN)) return 180;
+    if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    }
+    return 180;
+  },
+
+  formatBytes(bytes) {
+    if (!bytes || isNaN(bytes) || bytes <= 0) return null;
+    const mb = bytes / (1024 * 1024);
+    if (mb >= 1000) {
+      const gb = mb / 1024;
+      return `~${gb.toFixed(gb >= 10 ? 1 : 2)} GB`;
+    }
+    if (mb < 1) {
+      const kb = bytes / 1024;
+      return `~${Math.round(kb)} KB`;
+    }
+    return `~${mb >= 100 ? Math.round(mb) : mb.toFixed(1)} MB`;
+  },
+
+  getEstimatedSize(item, qualityKey) {
+    if (!item) return '';
+    const qKey = qualityKey || item.selectedQuality || '1080p';
+    const durSec = item.durationSeconds || this.parseDurationToSeconds(item.duration) || 180;
+
+    // 1. Check explicit formats table if available (Single Videos)
+    if (item.formats && Array.isArray(item.formats) && item.formats.length > 0) {
+      if (qKey === 'audio_mp3') {
+        const audioFmts = item.formats.filter((f) => f.is_audio_only && f.filesize);
+        if (audioFmts.length > 0) {
+          const bestAudio = audioFmts.sort((a, b) => (b.filesize || 0) - (a.filesize || 0))[0];
+          if (bestAudio && bestAudio.filesize) return this.formatBytes(bestAudio.filesize);
+        }
+        return this.formatBytes((320 * 1000 / 8) * durSec);
+      }
+
+      if (qKey === 'audio_flac') {
+        return this.formatBytes((960 * 1000 / 8) * durSec);
+      }
+
+      let targetHeight = 1080;
+      if (qKey === '4k') targetHeight = 2160;
+      else if (qKey === '2k') targetHeight = 1440;
+      else if (qKey === '1080p') targetHeight = 1080;
+      else if (qKey === '720p') targetHeight = 720;
+      else if (qKey === '480p') targetHeight = 480;
+
+      const videoStreams = item.formats
+        .filter((f) => {
+          if (!f.resolution) return false;
+          const m = f.resolution.match(/(\d+)x(\d+)/);
+          return m && parseInt(m[2], 10) <= targetHeight;
+        })
+        .sort((a, b) => {
+          const ma = a.resolution.match(/(\d+)x(\d+)/);
+          const mb = b.resolution.match(/(\d+)x(\d+)/);
+          const ha = ma ? parseInt(ma[2], 10) : 0;
+          const hb = mb ? parseInt(mb[2], 10) : 0;
+          return hb - ha;
+        });
+
+      const matchedVideo = videoStreams[0];
+      const audioStreams = item.formats
+        .filter((f) => f.is_audio_only && f.filesize)
+        .sort((a, b) => (b.filesize || 0) - (a.filesize || 0));
+      const bestAudioSize = audioStreams.length > 0 ? (audioStreams[0].filesize || 0) : ((160 * 1000 / 8) * durSec);
+
+      if (matchedVideo && matchedVideo.filesize) {
+        return this.formatBytes(matchedVideo.filesize + (matchedVideo.is_video_only ? bestAudioSize : 0));
+      }
+    }
+
+    // 2. Standard calibrated bitrate modeling based on duration (Playlist & Streams without filesize tags)
+    const bitrateMap = {
+      '4k': 20000 * 1000 / 8,      // ~2.5 MB/s
+      '2k': 10000 * 1000 / 8,      // ~1.25 MB/s
+      '1080p': 4200 * 1000 / 8,    // ~525 KB/s
+      '720p': 2200 * 1000 / 8,     // ~275 KB/s
+      '480p': 1100 * 1000 / 8,     // ~137.5 KB/s
+      'audio_mp3': 320 * 1000 / 8, // ~40 KB/s
+      'audio_flac': 960 * 1000 / 8 // ~120 KB/s
+    };
+
+    const bytesPerSec = bitrateMap[qKey] || (3500 * 1000 / 8);
+    return this.formatBytes(bytesPerSec * durSec);
+  },
+
   renderDropdownItems(item) {
     const qualities = item.availableQualities || ['4k', '2k', '1080p', '720p', '480p', 'audio_mp3', 'audio_flac'];
     const videoQualities = qualities.filter((q) => !q.startsWith('audio_'));
@@ -261,10 +354,14 @@ const App = {
     let html = '';
     videoQualities.forEach((q) => {
       const active = item.selectedQuality === q ? 'active' : '';
+      const sizeStr = this.getEstimatedSize(item, q) || '';
       const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
       html += `
         <div class="glass-dropdown-item ${active}" onclick="App.selectQuality('${item.id}', '${q}', event)">
-          <span>${this.getQualityLabel(q)}</span>
+          <div class="dropdown-item-content">
+            <span class="dropdown-item-label">${this.getQualityLabel(q)}</span>
+            <span class="dropdown-item-size">${sizeStr}</span>
+          </div>
           ${checkIcon}
         </div>
       `;
@@ -276,10 +373,14 @@ const App = {
 
     audioQualities.forEach((q) => {
       const active = item.selectedQuality === q ? 'active' : '';
+      const sizeStr = this.getEstimatedSize(item, q) || '';
       const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
       html += `
         <div class="glass-dropdown-item ${active}" onclick="App.selectQuality('${item.id}', '${q}', event)">
-          <span>${this.getQualityLabel(q)}</span>
+          <div class="dropdown-item-content">
+            <span class="dropdown-item-label">${this.getQualityLabel(q)}</span>
+            <span class="dropdown-item-size">${sizeStr}</span>
+          </div>
           ${checkIcon}
         </div>
       `;
@@ -311,9 +412,20 @@ const App = {
     const item = this.state.queue.find((q) => q.id === id);
     if (item) {
       item.selectedQuality = value;
+
+      // Dynamically update dropdown trigger label
+      const triggerLabel = document.querySelector(`#dropdown-${id} .glass-dropdown-trigger span`);
+      if (triggerLabel) triggerLabel.textContent = this.getQualityLabel(value);
+
+      // Dynamically update estimated size badge on tile
+      const sizeEl = document.getElementById(`size-${id}`);
+      if (sizeEl) sizeEl.textContent = this.getEstimatedSize(item, value) || '';
+
+      // Re-render dropdown menu to update active checkmark
+      const menuEl = document.querySelector(`#dropdown-${id} .glass-dropdown-menu`);
+      if (menuEl) menuEl.innerHTML = this.renderDropdownItems(item);
     }
     this.closeAllDropdowns();
-    this.renderQueue();
   },
 
   setTheme(mode, persist = true) {
@@ -529,6 +641,7 @@ const App = {
               title: entry.title || 'Playlist Track',
               thumbnail: entry.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60',
               duration: entry.formatted_duration || '--:--',
+              durationSeconds: entry.duration_seconds || this.parseDurationToSeconds(entry.formatted_duration),
               channel: playlist.title || 'Playlist Item',
               views: 'Playlist entry',
               selectedQuality: '1080p',
@@ -552,8 +665,10 @@ const App = {
             title: meta.title || 'Media Stream',
             thumbnail: meta.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60',
             duration: meta.formatted_duration || '--:--',
+            durationSeconds: meta.duration_seconds || this.parseDurationToSeconds(meta.formatted_duration),
             channel: meta.channel || meta.uploader || 'Online Media',
             views: meta.view_count ? this.formatViews(meta.view_count) : '',
+            formats: meta.formats || [],
             availableQualities: availableQualities,
             selectedQuality: defaultQuality,
             checked: true,
@@ -611,7 +726,7 @@ const App = {
       listEl.innerHTML = this.state.queue
         .map(
           (item) => `
-        <article class="stream-tile ${item.status === 'downloading' ? 'active-download' : ''}" id="tile-${item.id}">
+        <article class="stream-tile ${item.status === 'downloading' ? 'active-download' : ''} ${item.status === 'error' ? 'tile-error' : ''}" id="tile-${item.id}">
           <div class="tile-main-row">
             <!-- Left Checkbox -->
             <label class="custom-checkbox">
@@ -637,6 +752,7 @@ const App = {
                   <span>${item.channel}</span>
                 </span>
                 ${item.views ? `<span>•</span><span>${item.views}</span>` : ''}
+                ${this.getEstimatedSize(item, item.selectedQuality) ? `<span>•</span><span class="tile-size" id="size-${item.id}">${this.getEstimatedSize(item, item.selectedQuality)}</span>` : ''}
               </div>
             </div>
 
@@ -672,11 +788,11 @@ const App = {
                 <span id="status-text-${item.id}">${this.getStatusLabel(item)}</span>
               </div>
               <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" id="pct-${item.id}">
-                ${item.status === 'finished' ? '100%' : (item.progress > 0 ? item.progress.toFixed(1) + '%' : 'Ready')}
+                ${item.status === 'error' ? 'Failed' : (item.status === 'finished' ? '100%' : (item.status === 'downloading' ? item.progress.toFixed(1) + '%' : (item.status === 'waiting' ? 'Waiting' : 'Ready')))}
               </div>
             </div>
             <div class="tile-progress-track">
-              <div class="tile-progress-fill" id="fill-${item.id}" style="width: ${item.progress}%; ${item.status === 'finished' ? 'background: var(--status-valid);' : ''}"></div>
+              <div class="tile-progress-fill" id="fill-${item.id}" style="width: ${item.status === 'error' || item.status === 'finished' ? 100 : item.progress}%; ${item.status === 'error' ? 'background: var(--status-danger);' : (item.status === 'finished' ? 'background: var(--status-valid);' : '')}"></div>
             </div>
           </div>
         </article>
@@ -703,7 +819,12 @@ const App = {
     } else if (item.status === 'finished') {
       return '<svg class="svg-icon svg-stroke status-icon" style="color:var(--status-valid);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Completed</span>';
     } else if (item.status === 'error') {
-      return '<svg class="svg-icon svg-stroke status-icon" style="color:var(--status-danger);" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>Failed</span>';
+      return `<button class="btn-tile-status-error" onclick="App.showTileError('${item.id}', event)" type="button" title="Click to view error diagnostic log">
+        <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Failed (View Log)</span>
+      </button>`;
+    } else if (item.status === 'waiting') {
+      return '<span style="color: var(--text-dim);">Queued (Waiting)</span>';
     }
     return '<span>Queued (Ready)</span>';
   },
@@ -751,6 +872,7 @@ const App = {
   updateSummary() {
     const total = this.state.queue.length;
     const checked = this.state.queue.filter((q) => q.checked).length;
+    const activeChecked = this.state.queue.filter((q) => q.checked && q.status !== 'finished').length;
 
     const badge = document.getElementById('queueBadge');
     if (badge) badge.textContent = `${total} Item${total === 1 ? '' : 's'}`;
@@ -760,10 +882,51 @@ const App = {
 
     const btnDownload = document.getElementById('btnDownloadQueue');
     const btnText = document.getElementById('btnDownloadQueueText');
+    const btnIcon = document.getElementById('btnDownloadQueueIcon');
 
     if (btnDownload && btnText) {
-      btnDownload.disabled = checked === 0 || this.state.isDownloading;
-      btnText.textContent = this.state.isDownloading ? 'Downloading...' : `Download (${checked})`;
+      if (this.state.isDownloading) {
+        btnDownload.disabled = false;
+        btnDownload.classList.add('btn-cancel-active');
+        btnDownload.title = 'Click to stop / cancel active download queue';
+        btnText.textContent = 'Cancel Download';
+        if (btnIcon) {
+          btnIcon.innerHTML = '<svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/></svg>';
+        }
+      } else {
+        btnDownload.disabled = activeChecked === 0;
+        btnDownload.classList.remove('btn-cancel-active');
+        btnDownload.title = activeChecked > 0 ? `Download ${activeChecked} selected stream${activeChecked === 1 ? '' : 's'}` : 'No uncompleted items selected';
+        btnText.textContent = `Download (${activeChecked})`;
+        if (btnIcon) {
+          btnIcon.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+        }
+      }
+    }
+  },
+
+  async onMainDownloadButtonClick() {
+    if (this.state.isDownloading) {
+      await this.cancelQueueDownload();
+    } else {
+      await this.startQueueDownload();
+    }
+  },
+
+  async cancelQueueDownload() {
+    try {
+      await Api.invoke('cancel_download');
+    } catch (e) {
+      console.warn('cancel_download error:', e);
+    } finally {
+      this.state.isDownloading = false;
+      this.state.queue.forEach((q) => {
+        if (q.status === 'downloading' || q.status === 'waiting') {
+          q.status = 'ready';
+          this.updateTileProgressDOM(q);
+        }
+      });
+      this.updateSummary();
     }
   },
 
@@ -776,6 +939,16 @@ const App = {
 
     this.state.isDownloading = true;
     this.updateSummary();
+
+    // Mark selected items as waiting initially
+    selected.forEach((item) => {
+      item.status = 'waiting';
+      item.progress = 0;
+      item.speed = null;
+      item.eta = null;
+      item.errorDetails = null;
+      this.updateTileProgressDOM(item);
+    });
 
     // Map selected items to DownloadOptions
     const items = selected.map((item) => {
@@ -797,11 +970,6 @@ const App = {
         audioFormat = 'Flac';
         quality = 'Best';
       }
-
-      // Initial visual tile state update
-      item.status = 'downloading';
-      item.progress = 0;
-      this.updateTileProgressDOM(item);
 
       return {
         item_id: item.id,
@@ -839,6 +1007,12 @@ const App = {
       });
     } finally {
       this.state.isDownloading = false;
+      this.state.queue.forEach((q) => {
+        if (q.status === 'waiting') {
+          q.status = 'ready';
+          this.updateTileProgressDOM(q);
+        }
+      });
       this.updateSummary();
     }
   },
@@ -853,13 +1027,20 @@ const App = {
         if (progress.speed) item.speed = progress.speed;
         if (progress.eta) item.eta = progress.eta;
         if (progress.status) item.status = progress.status;
+        if (progress.error_message) item.errorDetails = progress.error_message;
 
         this.updateTileProgressDOM(item);
       }
     }
 
-    if (progress.status === 'finished' && (!progress.item_id || progress.percent >= 100)) {
+    if (progress.status === 'finished' && !progress.item_id) {
       this.state.isDownloading = false;
+      this.state.queue.forEach((q) => {
+        if (q.status === 'waiting' || q.status === 'downloading') {
+          q.status = 'ready';
+          this.updateTileProgressDOM(q);
+        }
+      });
       this.updateSummary();
     }
   },
@@ -872,21 +1053,43 @@ const App = {
   },
 
   updateTileProgressDOM(item) {
+    const tileEl = document.getElementById(`tile-${item.id}`);
+    if (tileEl) {
+      tileEl.classList.toggle('active-download', item.status === 'downloading');
+      tileEl.classList.toggle('tile-error', item.status === 'error');
+    }
+
     const fillEl = document.getElementById(`fill-${item.id}`);
     if (fillEl) {
-      fillEl.style.width = `${item.progress}%`;
-      if (item.status === 'finished') {
+      if (item.status === 'error') {
+        fillEl.style.width = '100%';
+        fillEl.style.background = 'var(--status-danger)';
+      } else if (item.status === 'finished') {
+        fillEl.style.width = '100%';
         fillEl.style.background = 'var(--status-valid)';
+      } else {
+        fillEl.style.width = `${item.progress}%`;
+        fillEl.style.background = 'var(--accent-gradient)';
       }
     }
 
     const pctEl = document.getElementById(`pct-${item.id}`);
     if (pctEl) {
-      pctEl.textContent = item.status === 'finished' ? '100%' : `${item.progress.toFixed(1)}%`;
-      if (item.status === 'finished') {
+      if (item.status === 'error') {
+        pctEl.textContent = 'Failed';
+        pctEl.style.color = 'var(--status-danger)';
+      } else if (item.status === 'finished') {
+        pctEl.textContent = '100%';
         pctEl.style.color = 'var(--status-valid)';
       } else if (item.status === 'downloading') {
+        pctEl.textContent = `${item.progress.toFixed(1)}%`;
         pctEl.style.color = 'var(--accent-cyan)';
+      } else if (item.status === 'waiting') {
+        pctEl.textContent = 'Waiting';
+        pctEl.style.color = 'var(--text-dim)';
+      } else {
+        pctEl.textContent = 'Ready';
+        pctEl.style.color = 'var(--text-dim)';
       }
     }
 
@@ -928,6 +1131,19 @@ const App = {
         }
       }
     }
+  },
+
+  showTileError(itemId, event) {
+    if (event) event.stopPropagation();
+    const item = this.state.queue.find((q) => q.id === itemId);
+    if (!item) return;
+
+    const details = item.errorDetails || 'Download failed for this stream. Inspect logs for details.';
+    this.showError({
+      title: 'Download Failed',
+      message: `Failed downloading "${item.title}".`,
+      details: details,
+    });
   },
 
   listenToProgressEvents() {

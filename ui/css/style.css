@@ -893,6 +893,25 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   color: var(--text-muted);
 }
 
+.tile-size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .tile-size {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.07);
+  color: var(--text-muted);
+}
+
 .tile-channel {
   color: var(--accent-cyan);
   font-weight: 500;
@@ -959,7 +978,7 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  min-width: 165px;
+  min-width: 195px;
   background: var(--glass-dropdown);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
@@ -996,8 +1015,32 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   transition: all 0.15s ease;
 }
 
+.dropdown-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: space-between;
+  margin-right: 6px;
+}
+
+.dropdown-item-label {
+  font-size: 11px;
+}
+
+.dropdown-item-size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
 .glass-dropdown-item:hover {
   background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.glass-dropdown-item:hover .dropdown-item-size {
   color: var(--text-main);
 }
 
@@ -1010,6 +1053,11 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   background: rgba(255, 133, 102, 0.12);
   color: var(--accent-cyan);
   font-weight: 600;
+}
+
+.glass-dropdown-item.active .dropdown-item-size {
+  color: var(--accent-cyan);
+  opacity: 0.85;
 }
 
 [data-theme="light"] .glass-dropdown-item.active {
@@ -1160,6 +1208,11 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   flex-shrink: 0;
 }
 
+.status-dot.waiting {
+  background: var(--text-dim);
+  opacity: 0.6;
+}
+
 .status-dot.downloading {
   background: var(--accent-cyan);
   box-shadow: 0 0 10px var(--accent-cyan);
@@ -1174,6 +1227,38 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
 .status-dot.error {
   background: var(--status-danger);
   box-shadow: 0 0 8px var(--status-danger);
+}
+
+.btn-tile-status-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--status-danger);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-tile-status-error:hover {
+  background: rgba(239, 68, 68, 0.24);
+  border-color: var(--status-danger);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-tile-status-error:active {
+  transform: translateY(0);
+}
+
+.stream-tile.tile-error {
+  border-color: rgba(239, 68, 68, 0.28);
 }
 
 @keyframes pulse {
@@ -1331,6 +1416,36 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.btn-download-primary.btn-cancel-active {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(239, 68, 68, 0.25);
+  cursor: pointer;
+}
+
+.btn-download-primary.btn-cancel-active:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.32);
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 5px 18px rgba(239, 68, 68, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-download-primary.btn-cancel-active:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+[data-theme="light"] .btn-download-primary.btn-cancel-active {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+}
+
+[data-theme="light"] .btn-download-primary.btn-cancel-active:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #dc2626;
 }
 
 /* Titlebar and General Glass Panels */
@@ -1861,8 +1976,25 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 11px;
   font-weight: 600;
+}
+
+.badge-active-engine-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-active-engine-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--status-valid);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .about-tech-footer {

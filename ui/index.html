@@ -184,8 +184,10 @@
 
       <div class="footer-right">
         <span class="queue-summary-text" id="queueSummary">0 selected</span>
-        <button class="btn-download-primary" id="btnDownloadQueue" onclick="App.startQueueDownload()" disabled>
-          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <button class="btn-download-primary" id="btnDownloadQueue" onclick="App.onMainDownloadButtonClick()" disabled>
+          <span id="btnDownloadQueueIcon" style="display:flex; align-items:center;">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          </span>
           <span id="btnDownloadQueueText">Download (0)</span>
         </button>
       </div>
@@ -412,11 +414,11 @@
 
       <!-- Active Engine Status Banner -->
       <div class="badge-active-engine">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>Shared Library: %LOCALAPPDATA%/curlyzed/bin</span>
+        <div class="badge-active-engine-left">
+          <svg class="svg-icon svg-stroke" style="width:13px; height:13px; flex-shrink:0;" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Shared Library:</span>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--status-valid);">(yt-dlp + FFmpeg + Deno)</span>
+        <span class="badge-active-engine-path">%LOCALAPPDATA%/curlyzed/bin</span>
       </div>
 
       <!-- Technical Footer -->

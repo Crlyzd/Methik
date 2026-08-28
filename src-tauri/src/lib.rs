@@ -3,7 +3,7 @@ pub mod config;
 pub mod core;
 pub mod engine;
 
-use commands::download::{download_playlist, download_queue, download_video};
+use commands::download::{cancel_download, download_playlist, download_queue, download_video};
 use commands::metadata::{get_playlist_info, get_video_info};
 use commands::system::{
     cancel_provisioning, cancel_update, check_for_updates, check_system_dependencies,
@@ -64,6 +64,7 @@ pub fn run() {
             download_video,
             download_playlist,
             download_queue,
+            cancel_download,
             toggle_always_on_top,
             minimize_window,
             toggle_maximize_window,

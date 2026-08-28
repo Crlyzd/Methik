@@ -69,6 +69,8 @@ pub struct DownloadProgress {
     pub status: String, // "downloading", "merging", "extracting_audio", "finished", "error"
     pub item_id: Option<String>,
     pub batch_info: Option<BatchProgressInfo>,
+    #[serde(default)]
+    pub error_message: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

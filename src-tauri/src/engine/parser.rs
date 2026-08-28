@@ -225,6 +225,7 @@ pub fn parse_progress_line(line: &str) -> Option<DownloadProgress> {
                 status: "downloading".to_string(),
                 item_id: None,
                 batch_info: None,
+                error_message: None,
             });
         }
     }
@@ -249,6 +250,7 @@ pub fn parse_progress_line(line: &str) -> Option<DownloadProgress> {
                 status: "downloading".to_string(),
                 item_id: None,
                 batch_info: None,
+                error_message: None,
             });
         }
     }
@@ -264,6 +266,7 @@ pub fn parse_progress_line(line: &str) -> Option<DownloadProgress> {
             status: "merging".to_string(),
             item_id: None,
             batch_info: None,
+            error_message: None,
         });
     }
 
@@ -277,6 +280,7 @@ pub fn parse_progress_line(line: &str) -> Option<DownloadProgress> {
             status: "extracting_audio".to_string(),
             item_id: None,
             batch_info: None,
+            error_message: None,
         });
     }
 

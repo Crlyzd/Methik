@@ -34,8 +34,20 @@ pub async fn download_video(
             Ok(())
         }
         Err(e) => {
-            append_app_log("ERROR", "Download", &format!("Download failed for {}: {}", options.url, e));
-            Err(format!("{}", e))
+            let err_msg = format!("{}", e);
+            append_app_log("ERROR", "Download", &format!("Download failed for {}: {}", options.url, err_msg));
+            let _ = app_handle.emit("download-progress", DownloadProgress {
+                percent: 0.0,
+                speed: None,
+                eta: None,
+                downloaded_bytes: 0,
+                total_bytes: None,
+                status: "error".to_string(),
+                item_id: options.item_id.clone(),
+                batch_info: None,
+                error_message: Some(err_msg.clone()),
+            });
+            Err(err_msg)
         }
     }
 }
@@ -129,6 +141,7 @@ pub async fn download_playlist(
                 overall_percent: 100.0,
                 current_title: "All Items Finished".to_string(),
             }),
+            error_message: None,
         },
     );
 
@@ -156,9 +169,15 @@ pub async fn download_queue(
     }
 
     let total_items = items.len();
+    crate::engine::ytdlp::set_download_cancelled(false);
     append_app_log("INFO", "Download", &format!("Starting queue download for {} items", total_items));
 
     for (i, item_opt) in items.iter().enumerate() {
+        if crate::engine::ytdlp::is_download_cancelled() {
+            append_app_log("INFO", "Download", "Queue download was cancelled by user. Halting batch loop.");
+            break;
+        }
+
         let current_index = i + 1;
         let handle_for_progress = app_handle.clone();
         let channel_for_progress = on_progress.clone();
@@ -166,11 +185,35 @@ pub async fn download_queue(
 
         append_app_log("INFO", "Download", &format!("Processing queue item {}/{}: URL: {}", current_index, total_items, item_opt.url));
 
+        // Emit initial start event for this specific item
+        let start_prog = DownloadProgress {
+            percent: 0.0,
+            speed: None,
+            eta: None,
+            downloaded_bytes: 0,
+            total_bytes: None,
+            status: "downloading".to_string(),
+            item_id: current_item_id.clone(),
+            batch_info: Some(BatchProgressInfo {
+                current_index,
+                total_items,
+                overall_percent: ((i as f64) / (total_items as f64) * 100.0 * 10.0).round() / 10.0,
+                current_title: format!("Item {}/{}", current_index, total_items),
+            }),
+            error_message: None,
+        };
+        let _ = channel_for_progress.send(start_prog.clone());
+        let _ = handle_for_progress.emit("download-progress", start_prog);
+
+        let current_item_id_cb = current_item_id.clone();
+        let channel_for_callback = channel_for_progress.clone();
+        let handle_for_callback = handle_for_progress.clone();
+
         let callback = Arc::new(move |mut progress: DownloadProgress| {
             let item_pct = progress.percent;
             let overall = ((i as f64) + (item_pct / 100.0)) / (total_items as f64) * 100.0;
 
-            progress.item_id = current_item_id.clone();
+            progress.item_id = current_item_id_cb.clone();
             progress.batch_info = Some(BatchProgressInfo {
                 current_index,
                 total_items,
@@ -179,20 +222,44 @@ pub async fn download_queue(
             });
 
             // Direct IPC channel delivery
-            let _ = channel_for_progress.send(progress.clone());
+            let _ = channel_for_callback.send(progress.clone());
 
             // Also emit globally
-            let _ = handle_for_progress.emit("download-progress", progress);
+            let _ = handle_for_callback.emit("download-progress", progress);
         });
 
         if let Err(e) = execute_download(item_opt, callback).await {
-            append_app_log("ERROR", "Download", &format!("Queue item {}/{} failed: {}", current_index, total_items, e));
-            return Err(format!("Failed downloading item {}: {}", current_index, e));
+            if crate::engine::ytdlp::is_download_cancelled() {
+                append_app_log("INFO", "Download", &format!("Queue item {}/{} stopped due to cancellation.", current_index, total_items));
+                break;
+            }
+
+            let err_msg = format!("{}", e);
+            append_app_log("ERROR", "Download", &format!("Queue item {}/{} failed: {}", current_index, total_items, err_msg));
+
+            let err_prog = DownloadProgress {
+                percent: 0.0,
+                speed: None,
+                eta: None,
+                downloaded_bytes: 0,
+                total_bytes: None,
+                status: "error".to_string(),
+                item_id: current_item_id.clone(),
+                batch_info: Some(BatchProgressInfo {
+                    current_index,
+                    total_items,
+                    overall_percent: (((i + 1) as f64) / (total_items as f64) * 100.0 * 10.0).round() / 10.0,
+                    current_title: format!("Item {}/{} Failed", current_index, total_items),
+                }),
+                error_message: Some(err_msg),
+            };
+            let _ = channel_for_progress.send(err_prog.clone());
+            let _ = handle_for_progress.emit("download-progress", err_prog);
+            // Non-blocking: continue processing subsequent items in the queue
         }
     }
 
-    append_app_log("INFO", "Download", &format!("Successfully finished processing queue of {} items", total_items));
-
+    append_app_log("INFO", "Download", &format!("Finished queue execution of {} items (cancelled: {})", total_items, crate::engine::ytdlp::is_download_cancelled()));
 
     // Final completion event
     let finish_prog = DownloadProgress {
@@ -209,10 +276,35 @@ pub async fn download_queue(
             overall_percent: 100.0,
             current_title: "Queue Finished".to_string(),
         }),
+        error_message: None,
     };
 
     let _ = on_progress.send(finish_prog.clone());
     let _ = app_handle.emit("download-progress", finish_prog);
+
+    Ok(())
+}
+
+/// IPC command to abort active download processes and stop queue progression
+#[tauri::command]
+pub async fn cancel_download(app_handle: AppHandle) -> Result<(), String> {
+    append_app_log("INFO", "Download", "User requested cancel_download");
+    crate::engine::ytdlp::cancel_active_download();
+
+    let _ = app_handle.emit(
+        "download-progress",
+        DownloadProgress {
+            percent: 0.0,
+            speed: None,
+            eta: None,
+            downloaded_bytes: 0,
+            total_bytes: None,
+            status: "finished".to_string(),
+            item_id: None,
+            batch_info: None,
+            error_message: Some("Download cancelled by user".to_string()),
+        },
+    );
 
     Ok(())
 }

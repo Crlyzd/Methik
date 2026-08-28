@@ -6,9 +6,55 @@ use crate::engine::args_builder::{
 };
 use crate::engine::dependency::locate_binary;
 use crate::engine::parser::{parse_playlist_json, parse_progress_line, parse_video_json};
-use crate::engine::process::new_async_command;
+use crate::engine::process::{new_async_command, new_command};
 use std::process::Stdio;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+
+static DOWNLOAD_CANCEL_FLAG: AtomicBool = AtomicBool::new(false);
+static ACTIVE_DOWNLOAD_PID: Mutex<Option<u32>> = Mutex::new(None);
+
+pub fn set_download_cancelled(val: bool) {
+    DOWNLOAD_CANCEL_FLAG.store(val, Ordering::SeqCst);
+}
+
+pub fn is_download_cancelled() -> bool {
+    DOWNLOAD_CANCEL_FLAG.load(Ordering::SeqCst)
+}
+
+pub fn set_active_download_pid(pid: Option<u32>) {
+    if let Ok(mut lock) = ACTIVE_DOWNLOAD_PID.lock() {
+        *lock = pid;
+    }
+}
+
+pub fn get_active_download_pid() -> Option<u32> {
+    if let Ok(lock) = ACTIVE_DOWNLOAD_PID.lock() {
+        *lock
+    } else {
+        None
+    }
+}
+
+/// Cancels active download process immediately and prevents subsequent queue items
+pub fn cancel_active_download() {
+    set_download_cancelled(true);
+    if let Some(pid) = get_active_download_pid() {
+        #[cfg(target_os = "windows")]
+        {
+            let _ = new_command("taskkill")
+                .args(&["/F", "/T", "/PID", &pid.to_string()])
+                .output();
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let _ = new_command("kill")
+                .args(&["-9", &pid.to_string()])
+                .output();
+        }
+        set_active_download_pid(None);
+    }
+}
 
 /// Locates the yt-dlp executable path or returns an AppError
 pub fn get_ytdlp_executable() -> Result<std::path::PathBuf, AppError> {
@@ -83,6 +129,10 @@ pub async fn execute_download<F>(
 where
     F: Fn(DownloadProgress) + Send + Sync + 'static,
 {
+    if is_download_cancelled() {
+        return Err(AppError::Process("Download cancelled by user".to_string()));
+    }
+
     let ytdlp_path = get_ytdlp_executable()?;
     let args = build_download_args(options);
 
@@ -92,6 +142,10 @@ where
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| AppError::Process(format!("Failed to spawn download process: {}", e)))?;
+
+    if let Some(pid) = child.id() {
+        set_active_download_pid(Some(pid));
+    }
 
     let mut stdout = child
         .stdout
@@ -114,6 +168,11 @@ where
     let mut stderr_done = false;
 
     while !stdout_done || !stderr_done {
+        if is_download_cancelled() {
+            set_active_download_pid(None);
+            return Err(AppError::Process("Download cancelled by user".to_string()));
+        }
+
         tokio::select! {
             res = tokio::io::AsyncReadExt::read(&mut stdout, &mut temp_stdout), if !stdout_done => {
                 match res {
@@ -164,6 +223,12 @@ where
         .await
         .map_err(|e| AppError::Process(format!("Process wait error: {}", e)))?;
 
+    set_active_download_pid(None);
+
+    if is_download_cancelled() {
+        return Err(AppError::Process("Download cancelled by user".to_string()));
+    }
+
     if !status.success() {
         let err_summary = stderr_logs.join("\n");
         return Err(AppError::Process(format!(
@@ -183,6 +248,7 @@ where
         status: "finished".to_string(),
         item_id: options.item_id.clone(),
         batch_info: None,
+        error_message: None,
     });
 
     Ok(())
