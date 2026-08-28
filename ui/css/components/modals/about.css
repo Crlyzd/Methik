@@ -1,0 +1,227 @@
+/* ========================================================= */
+/* ABOUT MODAL (AUTHOR CARD, VERSION CHECKER & TELEMETRY)    */
+/* ========================================================= */
+
+.about-box {
+  max-width: 440px;
+  padding: 16px 18px;
+  gap: 10px;
+}
+
+.about-header-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(255, 133, 102, 0.4);
+  flex-shrink: 0;
+}
+
+.about-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 9px;
+}
+
+.about-author-card {
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.author-credit-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.author-link {
+  color: var(--text-main);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.author-link:hover {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+}
+
+.coffee-links-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.btn-pill-link {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: var(--accent-cyan);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+[data-theme="light"] .btn-pill-link {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-pill-link:hover {
+  background: rgba(255, 133, 102, 0.15);
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.btn-pill-link.paypal:hover {
+  background: rgba(255, 122, 89, 0.18);
+  border-color: var(--accent-blue);
+}
+
+/* Version Checker Row */
+.version-status-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+}
+
+.version-status-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.version-status-left .check-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--status-valid);
+}
+
+.btn-check-version {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.btn-check-version:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* About Action Buttons Grid (Report Bug & Open Logs) */
+.about-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-about-action {
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.btn-about-action:hover {
+  background: var(--glass-card-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .btn-about-action:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.btn-about-action svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Active Engine Telemetry Banner */
+.badge-active-engine {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--status-valid);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-active-engine-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-active-engine-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--status-valid);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.about-tech-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  padding-top: 2px;
+  border-top: 1px solid var(--glass-border);
+}

@@ -1,0 +1,162 @@
+/* ========================================================= */
+/* CUSTOM GLASS TITLEBAR & WINDOW CONTROLS                   */
+/* ========================================================= */
+
+.app-titlebar {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 10, 12, 0.45);
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+[data-theme="light"] .app-titlebar {
+  background: var(--glass-titlebar);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.app-titlebar:active {
+  cursor: grabbing;
+}
+
+.brand-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+}
+
+.brand-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(255, 133, 102, 0.35);
+}
+
+.brand-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ffffff 40%, #ffaa80 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .brand-name {
+  background: linear-gradient(135deg, #1f120e 35%, #ea580c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-version {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 4px;
+}
+
+[data-theme="light"] .brand-version {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+[data-theme="light"] .btn-icon:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+.btn-icon.active-pin {
+  background: rgba(255, 133, 102, 0.15);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(255, 133, 102, 0.25);
+}
+
+.titlebar-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--glass-border);
+  margin: 0 3px;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.btn-win-ctrl {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-win-ctrl:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+[data-theme="light"] .btn-win-ctrl:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+.btn-win-close:hover {
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+}

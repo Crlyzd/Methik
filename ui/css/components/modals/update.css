@@ -1,0 +1,56 @@
+/* ========================================================= */
+/* UPDATE MODAL & RELEASE NOTES DIALOG                       */
+/* ========================================================= */
+
+.update-modal-box {
+  max-width: 440px;
+  width: 90%;
+}
+
+.update-meta-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+
+.update-notes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.update-notes-body {
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-main);
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+[data-theme="light"] .update-notes-body {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.update-notes-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.update-notes-body::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 3px;
+}

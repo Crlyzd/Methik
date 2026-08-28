@@ -1,0 +1,109 @@
+/* ========================================================= */
+/* BASE RESETS, TYPOGRAPHY & FLOATING SCROLLBARS             */
+/* ========================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global Ultra-Slim Minimalist Scrollbars (4px Floating Pill) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+[data-theme="light"] * {
+  scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-full);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+html, body {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+/* Tauri Drag Region Directives */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+}
+
+button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .stream-tile, .custom-checkbox, .format-dropdown, .banner-warning {
+  -webkit-app-region: no-drag;
+}
+
+/* Monochrome Vector SVGs */
+.svg-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.svg-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Main Window Shell */
+.app-window {
+  width: 100vw;
+  height: 100vh;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-strength);
+  -webkit-backdrop-filter: var(--blur-strength);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65), var(--glass-inner-shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}

@@ -1,0 +1,55 @@
+/* ========================================================= */
+/* AMBIENT GLOWS, KEYFRAMES & TRANSITIONS                    */
+/* ========================================================= */
+
+.ambient-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+  animation: float 14s ease-in-out infinite alternate;
+}
+
+.glow-1 {
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(255, 140, 105, 0.28) 0%, transparent 70%);
+  top: -120px;
+  left: -120px;
+}
+
+.glow-2 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(244, 91, 80, 0.22) 0%, transparent 70%);
+  bottom: -150px;
+  right: -130px;
+  animation-delay: -7s;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(30px) scale(1.06); }
+  100% { transform: translateY(-25px) scale(0.96); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

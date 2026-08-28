@@ -1,0 +1,131 @@
+/* ========================================================= */
+/* BANNER WARNINGS & TOAST NOTIFICATIONS                     */
+/* ========================================================= */
+
+/* Dependencies Banner */
+.banner-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(239, 68, 68, 0.14) 100%);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 8px 18px;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+  flex-shrink: 0;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #fef3c7;
+}
+
+.banner-content svg {
+  color: #f59e0b;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.banner-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+[data-theme="light"] .banner-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(249, 115, 22, 0.1) 100%);
+  border-bottom: 1px solid rgba(217, 119, 6, 0.28);
+}
+
+[data-theme="light"] .banner-content {
+  color: #78350f;
+  font-weight: 500;
+}
+
+[data-theme="light"] .banner-content svg {
+  color: #b45309;
+}
+
+[data-theme="light"] .banner-content code {
+  background: rgba(245, 158, 11, 0.2);
+  color: #78350f;
+  font-weight: 600;
+}
+
+.btn-banner {
+  background: #f59e0b;
+  color: #111827;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-banner:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="light"] .btn-banner {
+  background: #d97706;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="light"] .btn-banner:hover {
+  background: #b45309;
+}
+
+/* Global Floating Toast Container */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(20, 15, 20, 0.92);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur-strength);
+  -webkit-backdrop-filter: var(--blur-strength);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: slideDown 0.25s ease, fadeIn 0.25s ease;
+  pointer-events: auto;
+}
+
+[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.toast-success svg { color: var(--status-valid); }
+.toast-warning svg { color: var(--status-warning); }
+.toast-error svg { color: var(--status-danger); }
+.toast-info svg { color: var(--accent-cyan); }

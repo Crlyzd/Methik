@@ -1,0 +1,10 @@
+/* ========================================================= */
+/* MODALS COMPONENT AGGREGATOR                               */
+/* ========================================================= */
+
+@import 'modals/base.css';
+@import 'modals/settings.css';
+@import 'modals/about.css';
+@import 'modals/provisioning.css';
+@import 'modals/error.css';
+@import 'modals/update.css';

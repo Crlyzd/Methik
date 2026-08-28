@@ -50,14 +50,14 @@ graph LR
    - Enables downloading member-only, age-restricted, and private social media content without exposing login credentials.
 
 3. **Strict Layered Non-Monolithic Architecture**:
-   - **Presentation (Frontend)**: Vanilla HTML5, Vanilla CSS3 (Glassmorphism), Vanilla ES6+ JS. Zero heavy JS frameworks (React, Vue, Node.js runtime). Total frontend bundle under 50 KB.
+   - **Presentation (Frontend)**: Vanilla HTML5, Vanilla CSS3 (Glassmorphism), Vanilla ES6+ JS Modules. Zero heavy JS frameworks (React, Vue, Node.js runtime). Total frontend bundle under 50 KB. All files strictly modularized (< 350 lines per file).
    - **Tauri IPC Command Layer** (`src-tauri/src/commands/`): Thin handlers exposing commands and streaming async progress events.
-     - `metadata`: `fetch_video_metadata`, `fetch_playlist_metadata`
-     - `download`: `start_download`, `start_playlist_download`, `cancel_download`
-     - `system`: `check_dependencies`, `provision_dependencies`, `open_logs_directory`, `open_path_in_explorer`, `check_for_updates`, `get_app_version`
-     - `window`: `toggle_always_on_top`, `is_always_on_top`
+     - `metadata`: `get_video_info`, `get_playlist_info`
+     - `download`: `download_video`, `download_playlist`, `download_queue`, `cancel_download`
+     - `system`: `check_system_dependencies`, `provision_dependencies`, `cancel_provisioning`, `open_logs_folder`, `open_download_folder`, `open_media_file`, `open_bin_folder`, `open_appdata_folder`, `open_url`, `uninstall_binaries`, `check_for_updates`, `download_and_apply_update`, `cancel_update`, `get_app_info`, `get_system_paths`, `get_user_settings`, `save_user_settings_command`, `select_download_folder`, `select_cookie_file`, `read_clipboard`, `log_client_event`, `is_dev_mode`
+     - `window`: `toggle_always_on_top`, `minimize_window`, `toggle_maximize_window`, `close_window`, `set_view_window_mode`
    - **Core Domain** (`src-tauri/src/core/`): Pure data models (`VideoMetadata`, `PlaylistMetadata`, `DownloadProgress`, `FormatInfo`), traits, and strongly-typed errors (`thiserror`).
-   - **Engine Layer** (`src-tauri/src/engine/`): Dependency locator, AppData auto-provisioner, argument builder, stdout stream parser, updater, and child process executor.
+   - **Engine Layer** (`src-tauri/src/engine/`): Dependency locator, AppData auto-provisioner, argument builder, stdout stream parser, updater, process spawner (`process.rs`), and child process executor.
    - **Config Layer** (`src-tauri/src/config/`): AppData paths, directory resolution, and settings persistence.
 
 4. **UI, Aesthetics & Iconography Standards**:
@@ -79,7 +79,7 @@ graph LR
 methik/
 ├── .agents/                      # Local AI agent rules (ignored in git)
 │   └── rules/
-│       ├── architecture.md       # Architectural rules and guidelines
+│       ├── architecture.md       # Architectural rules and guidelines (Anti-monolithic policy)
 │       └── workflow.md           # Multi-agent workflow rules
 ├── .gitignore                    # Git ignore configurations
 ├── AGENTS.md                     # This reference file
@@ -118,15 +118,41 @@ methik/
 │           ├── args_builder.rs   # CLI argument construction (formats, cookies)
 │           ├── dependency.rs     # Binary locator & version validation
 │           ├── parser.rs         # JSON & stream progress parser
+│           ├── process.rs        # Detached background process creation
 │           ├── provisioner.rs    # Auto-provisioning & GitHub release fetcher
 │           ├── updater.rs        # App version check & update notifier
 │           └── ytdlp.rs          # Subprocess executor
-└── ui/                           # Minimalist Frosted Glass Webview (Vanilla)
+└── ui/                           # Minimalist Frosted Glass Webview (Vanilla ES Modules)
     ├── icon.png                  # App icon asset
     ├── index.html                # Main UI layout & modal overlays
     ├── css/
-    │   └── style.css             # Glassmorphism design tokens & styles
+    │   ├── style.css             # Main stylesheet aggregator
+    │   ├── base/
+    │   │   ├── variables.css     # Design tokens & color palettes
+    │   │   └── reset.css         # Global resets & scrollbars
+    │   ├── components/
+    │   │   ├── titlebar.css      # Titlebar & window controls
+    │   │   ├── input.css         # URL input & hero layout
+    │   │   ├── preview.css       # Video metadata card
+    │   │   ├── dropdown.css      # Custom frosted glass dropdowns
+    │   │   ├── queue.css         # Download queue cards & action buttons
+    │   │   ├── progress.css      # Progress bars & metric badges
+    │   │   ├── modals.css        # Settings, About, Provisioning modals
+    │   │   └── toast.css         # Toast notifications & alert banners
+    │   └── utilities/
+    │       └── animations.css    # Keyframes, ambient glows & transitions
     └── js/
         ├── api.js                # Tauri IPC invoke wrappers & event listeners
-        └── app.js                # State management, UI events & animations
+        ├── app.js                # Application coordinator & bootstrapper (< 100 lines)
+        └── modules/
+            ├── toast.js          # Toast alerts & warning banner
+            ├── dropdown.js       # Custom glassmorphic dropdown engine
+            ├── modal.js          # Modal dialog lifecycle manager
+            ├── metadata.js       # Video & Playlist metadata fetch pipeline
+            ├── formats.js        # Format parser & quality dropdown options
+            ├── queue.js          # Download queue item cards & actions
+            ├── progress.js       # Progress stream listener & ETA/speed calculator
+            ├── settings.js       # Settings persistence, themes & cookies
+            ├── provisioner-ui.js # Missing binary warning & auto-downloader UI
+            └── updater-ui.js     # Update checking & in-app update trigger
 ```
