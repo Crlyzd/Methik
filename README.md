@@ -1,99 +1,71 @@
 # Methik
 
 <p align="center">
-  <strong>Ultra-lightweight, 100% portable YouTube video & audio downloader desktop application.</strong><br>
-  Powered by <strong>Rust (Tauri v2)</strong> and a minimalist <strong>Frosted Glass / Light Mica</strong> web interface.
+  <strong>The simplest, fastest way to download videos and music on Windows.</strong><br>
+  Clean, modern, and 100% portable — no setup or technical skills required.
+</p>
+
+<p align="center">
+  <a href="https://kaleksananbagus.com/">Website</a> •
+  <a href="https://saweria.co/curlyzed">Donate (Saweria)</a> •
+  <a href="https://paypal.me/BagusMassani">Donate (PayPal)</a> •
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform">Report an Issue</a>
 </p>
 
 ---
 
-## Key Features
+## What is Methik?
 
-- **100% Portable & Zero Setup**: No Python, `yt-dlp`, or `ffmpeg` needed in system `$PATH`. Methik automatically downloads and manages portable binaries directly inside `%APPDATA%/Methik/bin/`.
-- **Ultra-Small Binary Footprint**: Total release binary under 6 MB with native WebView2 integration and sub-50 KB vanilla frontend.
-- **Dual Theme Support**: Switch seamlessly between **Dark Mode (Frosted Glass)** and **Light Mode (Mica / Acrylic)** with persistent settings.
-- **High-Quality Stream Downloads**:
-  - Video: **4K UHD**, **1080p FHD**, **720p HD**, **480p SD** (MP4)
-  - Audio: **MP3 320k**, **FLAC Lossless**
-  - Full YouTube Playlist parsing and batch downloads
-- **Alitken-Inspired UX**: Custom frosted glass dropdowns, interactive always-on-top pin, built-in log viewer, and bug reporting.
+**Methik** is a lightweight desktop app designed to make downloading online videos and music effortless. 
+
+Whether you want to save a high-definition 4K video, grab an entire YouTube playlist, or convert your favorite music to MP3, Methik does it in just a few clicks. It runs directly on your computer with a modern, distraction-free frosted glass design.
 
 ---
 
-## Quick Start (Clone & Run on Any Machine)
+## ✨ Features You'll Love
 
-### Option 1: Pure Rust (Zero Node.js Required)
-```powershell
-# Clone the repository
-git clone https://github.com/Crlyzd/Methik.git
-cd Methik
-
-# Run directly with Cargo
-cargo run --manifest-path src-tauri/Cargo.toml
-```
-
-### Option 2: One-Click PowerShell Script
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run.ps1
-```
-*Provides an interactive menu for Live Dev Mode, Release Compilation, Unit Tests, and AppData management.*
-
-### Option 3: Using Tauri CLI / NPM
-```powershell
-npm install
-npm run dev
-```
+- **Zero Setup Needed**: No complicated installations, command prompts, or extra software. Just open Methik and start downloading.
+- **Top Quality Video & Audio**:
+  - **Video**: 4K Ultra HD, 1080p Full HD, 720p HD, and 480p SD (MP4 format).
+  - **Audio**: Crystal-clear MP3 (320 kbps) and lossless FLAC.
+- **Works with 1,000+ Websites**:
+  - **YouTube**: Videos, Shorts, and full Playlists.
+  - **Social Media**: TikTok, Instagram Reels & Stories, Facebook, Twitter / X, Reddit, and Twitch clips.
+  - **Music**: SoundCloud and other streaming sites.
+- **Queue & Batch Downloads**: Add multiple links to your list and download them all at once.
+- **Easy Folder Access**: Change your download folder anytime and open your saved files directly from the app.
+- **Light & Dark Themes**: Beautiful frosted glass dark mode and clean light mode to match your desktop.
+- **Always on Top Pin**: Keep Methik floating neatly in the corner of your screen while you browse.
+- **Login & Private Content Support**: Easily download member-only or age-restricted videos using your existing browser session.
 
 ---
 
-## Building Standalone Release Executable
+## 🚀 How to Use Methik
 
-To compile the smallest optimized standalone executable (`methik.exe`):
+### Step 1: Copy a Link
+Find any video, reel, or song in your browser and copy its URL.
 
-```powershell
-# Using cargo
-cargo build --release --manifest-path src-tauri/Cargo.toml
+### Step 2: Paste & Choose Format
+Open Methik and paste the link into the search bar. Choose whether you want a **Video** (and your preferred resolution) or **Audio** (MP3 / FLAC).
 
-# Output will be generated at:
-# target/release/methik.exe
-```
-
----
-
-## Architecture & Directory Layout
-
-```text
-Methik/
-├── .agents/                      # Agent architecture & workflow rules
-├── AGENTS.md                     # Agent system instructions
-├── Cargo.lock                    # Exact Rust dependency lock
-├── Cargo.toml                    # Root workspace config
-├── package.json                  # Tauri CLI dev dependencies
-├── run.ps1                       # Interactive runner & build utility
-├── src-tauri/                    # Rust backend
-│   ├── Cargo.toml
-│   ├── tauri.conf.json           # Window configuration (500x500 fixed)
-│   └── src/
-│       ├── main.rs               # App entrypoint
-│       ├── lib.rs                # IPC command registry
-│       ├── commands/             # Tauri IPC handlers (system, metadata, download, window)
-│       ├── config/               # Settings & AppData path resolution
-│       ├── core/                 # Video/Audio data models & error types
-│       └── engine/               # yt-dlp & FFmpeg auto-provisioner and stream parsers
-└── ui/                           # Vanilla Frosted Glass Webview (Zero JS Frameworks)
-    ├── index.html                # App views & modals
-    ├── css/
-    │   └── style.css             # Frosted Glass & Mica Design System
-    └── js/
-        ├── app.js                # UI controller & theme manager
-        └── api.js                # Tauri IPC client bridge
-```
+### Step 3: Click Download
+Hit **Download**! Once finished, click the **Open** button to jump straight to your saved file or folder.
 
 ---
 
-## Support & Links
+## 💡 Helpful Tips
 
-- **Author Website**: [kaleksananbagus.com](https://kaleksananbagus.com/)
-- **Buy Me a Coffee (Saweria)**: [saweria.co/curlyzed](https://saweria.co/curlyzed)
-- **Buy Me a Coffee (PayPal)**: [paypal.me/BagusMassani](https://paypal.me/BagusMassani)
-- **Report Bug / Request Feature**: [Google Forms](https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform)
+- **Downloading Playlists**: Paste a YouTube playlist link, and Methik will automatically list all the videos so you can select and download them together.
+- **Private or Age-Restricted Videos**: If a video requires you to be logged in (like Instagram or age-restricted YouTube videos), open **Settings** (gear icon) and select your default browser (Chrome, Edge, Firefox, Brave, etc.) to securely use your existing login.
+- **Portability**: You can keep Methik on a USB flash drive and run it on any Windows PC without having to install it.
+
+---
+
+## ☕ Support & Community
+
+If you find Methik helpful and would like to support its development:
+
+- **Official Website**: [kaleksananbagus.com](https://kaleksananbagus.com/)
+- **Buy Me a Coffee (Saweria / Indonesia)**: [saweria.co/curlyzed](https://saweria.co/curlyzed)
+- **Buy Me a Coffee (PayPal / International)**: [paypal.me/BagusMassani](https://paypal.me/BagusMassani)
+- **Feedback & Feature Requests**: [Submit via Google Forms](https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform)
