@@ -39,3 +39,10 @@ desktop.ini
 *.swo
 *.sublime-project
 *.sublime-workspace
+
+# Agent & AI Tooling
+.agents/
+.gemini/
+.claude/
+.cursor/
+.antigravity/
