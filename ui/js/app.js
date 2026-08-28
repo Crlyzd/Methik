@@ -482,10 +482,10 @@ const App = {
             id: 'vid_' + (meta.id || Math.random().toString(36).substring(7)),
             videoId: meta.id || '',
             url: meta.webpage_url || url,
-            title: meta.title || 'YouTube Video',
+            title: meta.title || 'Media Stream',
             thumbnail: meta.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=60',
             duration: meta.formatted_duration || '--:--',
-            channel: meta.channel || 'YouTube',
+            channel: meta.channel || meta.uploader || 'Online Media',
             views: meta.view_count ? this.formatViews(meta.view_count) : '',
             availableQualities: availableQualities,
             selectedQuality: defaultQuality,
@@ -1022,7 +1022,7 @@ const App = {
       if (!report || !report.deno || !report.deno.is_valid) {
         missingItems.push({
           name: 'Deno',
-          desc: 'JavaScript engine for YouTube bot-challenge solver',
+          desc: 'JavaScript engine for stream extractors & bot-challenge solver',
           color: 'var(--status-valid)',
           icon: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
           sizeMB: 35,

@@ -502,6 +502,29 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   max-width: 440px;
 }
 
+.hero-tip {
+  font-size: 11px;
+  color: var(--text-dim);
+  max-width: 460px;
+  line-height: 1.45;
+  text-align: center;
+  margin: -2px 0 0 0;
+}
+
+.hero-tip strong {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.hero-tip-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  vertical-align: -1.5px;
+  margin-right: 3px;
+  color: var(--text-dim);
+}
+
 /* ========================================================= */
 /* 2. QUEUE VIEW (Active Queue Mode)                         */
 /* ========================================================= */
