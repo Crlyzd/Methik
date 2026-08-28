@@ -67,6 +67,5 @@ Hit **Download**! Once finished, click the **Open** button to jump straight to y
 If you find Methik helpful and would like to support its development:
 
 - **Official Website**: [kaleksananbagus.com](https://kaleksananbagus.com/)
-- **Buy Me a Coffee (Saweria / Indonesia)**: [saweria.co/curlyzed](https://saweria.co/curlyzed)
-- **Buy Me a Coffee (PayPal / International)**: [paypal.me/BagusMassani](https://paypal.me/BagusMassani)
+- **Buy Me a Coffee**: [Saweria](https://saweria.co/curlyzed) - [PayPal](https://paypal.me/BagusMassani)
 - **Feedback & Feature Requests**: [Submit via Google Forms](https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform)
