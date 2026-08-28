@@ -1,4 +1,9 @@
-# Methik
+<img width="1429" height="768" alt="image" src="https://github.com/user-attachments/assets/83c8d365-1266-4af1-810c-029669f279f3" />
+
+
+<h1 align="center">
+  Methik
+</h1>
 
 <p align="center">
   <strong>The simplest, fastest way to download videos and music on Windows.</strong><br>
@@ -32,6 +37,9 @@ Whether you want to save a high-definition 4K video, grab an entire YouTube play
 - **Login & Private Content Support**: Easily download member-only or age-restricted videos using your existing browser session.
 
 ---
+
+<img width="567" height="653" alt="image" src="https://github.com/user-attachments/assets/ac76ea81-4963-44b1-b789-a31888e68134" />
+
 
 ## 🚀 How to Use Methik
 
