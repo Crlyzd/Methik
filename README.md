@@ -1,4 +1,6 @@
-# Methik
+<h1 align="center">
+  Methik
+</h1>
 
 <p align="center">
   <strong>The simplest, fastest way to download videos and music on Windows.</strong><br>
