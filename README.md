@@ -5,13 +5,6 @@
   Clean, modern, and 100% portable — no setup or technical skills required.
 </p>
 
-<p align="center">
-  <a href="https://kaleksananbagus.com/">Website</a> •
-  <a href="https://saweria.co/curlyzed">Donate (Saweria)</a> •
-  <a href="https://paypal.me/BagusMassani">Donate (PayPal)</a> •
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSf9RoZ7ANybXnsOQMyCAFXxSB85rJxr2z767aPOk_gECioiMg/viewform">Report an Issue</a>
-</p>
-
 ---
 
 ## What is Methik?
