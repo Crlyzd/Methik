@@ -1,6 +1,6 @@
 [package]
 name = "methik"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ultra-lightweight portable YouTube video & audio downloader"
 authors = ["Kaleksanan Bagus"]
 edition = "2021"
