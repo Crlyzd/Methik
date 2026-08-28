@@ -89,6 +89,22 @@ pub fn open_logs_folder() -> Result<(), String> {
     open_folder_in_os(&path.to_string_lossy())
 }
 
+/// Opens the specified download folder (or user settings default / Desktop) in the OS file manager
+#[tauri::command]
+pub fn open_download_folder(path: Option<String>) -> Result<(), String> {
+    let target_str = match path {
+        Some(p) if !p.trim().is_empty() => p,
+        _ => crate::config::paths::load_user_settings().download_dir,
+    };
+
+    let target_path = std::path::PathBuf::from(target_str);
+    if !target_path.exists() {
+        let _ = std::fs::create_dir_all(&target_path);
+    }
+
+    open_folder_in_os(&target_path.to_string_lossy())
+}
+
 /// Deletes binaries from %APPDATA%/Methik/bin
 #[tauri::command]
 pub fn uninstall_binaries() -> Result<SystemDependenciesReport, String> {

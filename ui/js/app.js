@@ -377,6 +377,14 @@ const App = {
     }
   },
 
+  async openDownloadFolder() {
+    try {
+      await Api.invoke('open_download_folder', { path: this.state.downloadDir || null });
+    } catch (e) {
+      console.error('Failed to open download folder:', e);
+    }
+  },
+
   async pasteHeroLink() {
     try {
       const text = await Api.readClipboard();
@@ -663,7 +671,7 @@ const App = {
 
     if (btnDownload && btnText) {
       btnDownload.disabled = checked === 0 || this.state.isDownloading;
-      btnText.textContent = this.state.isDownloading ? 'Downloading...' : `Download Selected (${checked})`;
+      btnText.textContent = this.state.isDownloading ? 'Downloading...' : `Download (${checked})`;
     }
   },
 

@@ -166,8 +166,12 @@
           <span class="save-to-label">Save to:</span>
           <code class="save-to-path" id="savePathDisplay">Desktop</code>
           <button class="btn-browse" onclick="App.browseDownloadFolder()" title="Change folder">
-            <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             <span>Change</span>
+          </button>
+          <button class="btn-browse" onclick="App.openDownloadFolder()" title="Open output folder">
+            <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Open</span>
           </button>
         </div>
       </div>
@@ -176,7 +180,7 @@
         <span class="queue-summary-text" id="queueSummary">0 selected</span>
         <button class="btn-download-primary" id="btnDownloadQueue" onclick="App.startQueueDownload()" disabled>
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          <span id="btnDownloadQueueText">Download Selected (0)</span>
+          <span id="btnDownloadQueueText">Download (0)</span>
         </button>
       </div>
     </footer>

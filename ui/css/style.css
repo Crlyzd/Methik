@@ -1104,8 +1104,8 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
-  gap: 12px;
+  padding: 0 12px;
+  gap: 10px;
   flex-shrink: 0;
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.2);
   animation: fadeIn 0.3s ease;
@@ -1115,20 +1115,20 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
 .footer-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 215px;
+  max-width: 275px;
 }
 
 .save-to-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: 3px 6px;
   flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
@@ -1146,8 +1146,8 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   font-size: 10.5px;
   color: var(--text-main);
   flex: 1 1 auto;
-  min-width: 30px;
-  max-width: 105px;
+  min-width: 25px;
+  max-width: 110px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1157,9 +1157,9 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
-  padding: 3px 6px;
+  padding: 2.5px 5px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 9.5px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1191,18 +1191,23 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   background: var(--accent-gradient);
   color: #fff;
   border: none;
-  padding: 7px 16px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 14px rgba(255, 133, 102, 0.35);
+  box-shadow: 0 3px 12px rgba(255, 133, 102, 0.35);
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.btn-download-primary .svg-icon {
+  width: 13px;
+  height: 13px;
 }
 
 .btn-download-primary:hover:not(:disabled) {

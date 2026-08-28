@@ -8,8 +8,9 @@ use commands::metadata::{get_playlist_info, get_video_info};
 use commands::system::{
     cancel_provisioning, cancel_update, check_for_updates, check_system_dependencies,
     download_and_apply_update, get_app_info, get_system_paths, get_user_settings, is_dev_mode,
-    log_client_event, open_appdata_folder, open_logs_folder, open_url, provision_dependencies,
-    read_clipboard, save_user_settings_command, select_download_folder, uninstall_binaries,
+    log_client_event, open_appdata_folder, open_download_folder, open_logs_folder, open_url,
+    provision_dependencies, read_clipboard, save_user_settings_command, select_download_folder,
+    uninstall_binaries,
 };
 use commands::window::{
     close_window, minimize_window, set_view_window_mode, toggle_always_on_top, toggle_maximize_window,
@@ -41,6 +42,7 @@ pub fn run() {
             cancel_provisioning,
             open_appdata_folder,
             open_logs_folder,
+            open_download_folder,
             open_url,
             uninstall_binaries,
             get_system_paths,
