@@ -75,9 +75,23 @@ export const App = {
 
     // Modal backdrop click listener
     Modal.setupModalListeners(() => ProvisionerUI.promptCancelProvisioning());
+
+    // Native Window Dragging on Titlebar Mousedown
+    const titlebar = document.querySelector('.app-titlebar');
+    if (titlebar) {
+      titlebar.addEventListener('mousedown', (e) => {
+        WindowCtrl.startDragging(e);
+      });
+      titlebar.addEventListener('dblclick', (e) => {
+        if (!e.target.closest('button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .glass-dropdown, .format-dropdown')) {
+          WindowCtrl.toggleMaximize();
+        }
+      });
+    }
   },
 
   // --- Window Controls ---
+  startDragging: (e) => WindowCtrl.startDragging(e),
   togglePin: () => WindowCtrl.togglePin(),
   minimizeWindow: () => WindowCtrl.minimizeWindow(),
   toggleMaximize: () => WindowCtrl.toggleMaximize(),

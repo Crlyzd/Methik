@@ -1,5 +1,18 @@
 use tauri::{AppHandle, LogicalSize, Manager, Size};
 
+/// Initiates native OS window dragging on mouse down
+#[tauri::command]
+pub fn drag_window(app_handle: AppHandle) -> Result<(), String> {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        window
+            .start_dragging()
+            .map_err(|e| format!("Failed to start dragging: {}", e))?;
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
+
 /// Configures window resizability and sizing constraints for hero vs queue views
 #[tauri::command]
 pub fn set_view_window_mode(app_handle: AppHandle, mode: String) -> Result<(), String> {

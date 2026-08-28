@@ -13,7 +13,8 @@ use commands::system::{
     select_cookie_file, select_download_folder, uninstall_binaries,
 };
 use commands::window::{
-    close_window, minimize_window, set_view_window_mode, toggle_always_on_top, toggle_maximize_window,
+    close_window, drag_window, minimize_window, set_view_window_mode, toggle_always_on_top,
+    toggle_maximize_window,
 };
 
 /// Main entry point to initialize application directories and launch the Tauri app.
@@ -65,6 +66,7 @@ pub fn run() {
             download_playlist,
             download_queue,
             cancel_download,
+            drag_window,
             toggle_always_on_top,
             minimize_window,
             toggle_maximize_window,

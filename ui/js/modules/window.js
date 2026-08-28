@@ -29,6 +29,18 @@ export async function loadAppInfo() {
   }
 }
 
+export function startDragging(e) {
+  // Only trigger on primary left mouse button
+  if (e.button !== 0) return;
+  // Ignore clicks on interactive controls
+  if (e.target.closest('button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .glass-dropdown, .format-dropdown')) {
+    return;
+  }
+  Api.invoke('drag_window').catch((err) => {
+    console.warn('Native drag_window failed:', err);
+  });
+}
+
 export async function togglePin() {
   const btn = document.getElementById('btnPin');
   const newPinned = !state.isPinned;
