@@ -95,12 +95,10 @@ html, body {
 /* Tauri Drag Region Directives */
 [data-tauri-drag-region] {
   -webkit-app-region: drag;
-  app-region: drag;
 }
 
 button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .stream-tile, .custom-checkbox, .format-dropdown, .banner-warning {
   -webkit-app-region: no-drag;
-  app-region: no-drag;
 }
 
 /* Ambient Background Glow */
@@ -222,12 +220,14 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   letter-spacing: 1px;
   background: linear-gradient(135deg, #ffffff 40%, #ffaa80 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 [data-theme="light"] .brand-name {
   background: linear-gradient(135deg, #1f120e 35%, #ea580c 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -454,12 +454,14 @@ button, input, select, textarea, a, .btn-icon, .btn-win-ctrl, .modal-box, .strea
   letter-spacing: 1.5px;
   background: linear-gradient(135deg, #ffffff 30%, #ffaa80 75%, #ff7a59 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 [data-theme="light"] .hero-title {
   background: linear-gradient(135deg, #1f120e 20%, #ea580c 75%, #c2410c 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
