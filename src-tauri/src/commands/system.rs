@@ -246,6 +246,44 @@ if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     .map_err(|e| format!("Task execution error: {}", e))?
 }
 
+/// Spawns a native OS file picker dialog to select custom Netscape cookies.txt file
+#[tauri::command]
+pub async fn select_cookie_file() -> Result<Option<String>, String> {
+    tokio::task::spawn_blocking(|| {
+        #[cfg(target_os = "windows")]
+        {
+            let script = r#"
+Add-Type -AssemblyName System.Windows.Forms
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = "Select Netscape cookies.txt File"
+$dialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"
+$dialog.CheckFileExists = $true
+if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+    Write-Output $dialog.FileName
+}
+"#;
+            let output = Command::new("powershell")
+                .args(["-NoProfile", "-NonInteractive", "-Command", script])
+                .output()
+                .map_err(|e| format!("Failed to open file picker: {}", e))?;
+
+            if output.status.success() {
+                let chosen = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !chosen.is_empty() {
+                    return Ok(Some(chosen));
+                }
+            }
+            Ok(None)
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            Ok(None)
+        }
+    })
+    .await
+    .map_err(|e| format!("Task execution error: {}", e))?
+}
+
 /// Opens an external URL in the user's default browser safely
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {

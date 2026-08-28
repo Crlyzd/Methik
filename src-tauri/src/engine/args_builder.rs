@@ -208,5 +208,12 @@ mod tests {
         assert!(args.contains(&"--cookies-from-browser".to_string()));
         assert!(args.contains(&"edge".to_string()));
     }
+
+    #[test]
+    fn test_custom_cookie_file_args() {
+        let args = build_video_metadata_args("https://instagram.com/reel/123", Some(&CookieSource::CustomFile("C:/test/cookies.txt".to_string())));
+        assert!(args.contains(&"--cookies".to_string()));
+        assert!(args.contains(&"C:/test/cookies.txt".to_string()));
+    }
 }
 

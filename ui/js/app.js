@@ -9,6 +9,7 @@ const App = {
     isDownloading: false,
     downloadDir: 'Desktop',
     cookieSource: 'None',
+    customCookiePath: '',
     dependencies: null,
     theme: 'dark',
     initialized: false,
@@ -141,8 +142,40 @@ const App = {
       });
     }
 
+    const rowEl = document.getElementById('customCookieFileRow');
+    if (rowEl) {
+      rowEl.style.display = value === 'CustomFile' ? 'flex' : 'none';
+    }
+
     this.closeAllDropdowns();
-    this.saveCurrentSettings();
+
+    if (value === 'CustomFile' && !this.state.customCookiePath) {
+      this.browseCookieFile();
+    } else {
+      this.saveCurrentSettings();
+    }
+  },
+
+  async browseCookieFile() {
+    try {
+      const chosen = await Api.invoke('select_cookie_file');
+      if (chosen && typeof chosen === 'string') {
+        this.state.customCookiePath = chosen;
+        this.updateCookieFileDisplay();
+        await this.saveCurrentSettings();
+      }
+    } catch (e) {
+      console.error('Failed to select cookie file:', e);
+    }
+  },
+
+  updateCookieFileDisplay() {
+    const pathEl = document.getElementById('customCookiePathText');
+    if (pathEl) {
+      const path = this.state.customCookiePath || '';
+      pathEl.textContent = path ? path : 'No cookies.txt selected';
+      pathEl.title = path ? path : 'No file selected';
+    }
   },
 
   openCookieSettings() {
@@ -156,13 +189,22 @@ const App = {
 
   async saveCurrentSettings() {
     try {
+      let cookieSourceVal = null;
+      if (this.state.cookieSource === 'CustomFile') {
+        if (this.state.customCookiePath) {
+          cookieSourceVal = { CustomFile: this.state.customCookiePath };
+        }
+      } else if (this.state.cookieSource && this.state.cookieSource !== 'None') {
+        cookieSourceVal = this.state.cookieSource;
+      }
+
       await Api.invoke('save_user_settings_command', {
         settings: {
           download_dir: this.state.downloadDir,
           default_quality: 'FHD1080',
           audio_format: 'Mp3',
           dark_mode: this.state.theme === 'dark',
-          cookie_source: this.state.cookieSource === 'None' ? null : this.state.cookieSource,
+          cookie_source: cookieSourceVal,
         },
       });
     } catch (e) {
@@ -317,17 +359,42 @@ const App = {
           this.setTheme(settings.dark_mode ? 'dark' : 'light', false);
         }
         if (settings.cookie_source) {
-          const cookieVal = typeof settings.cookie_source === 'string' ? settings.cookie_source : 'None';
+          let cookieVal = 'None';
+          let customPath = '';
+          if (typeof settings.cookie_source === 'object' && settings.cookie_source && settings.cookie_source.CustomFile) {
+            cookieVal = 'CustomFile';
+            customPath = settings.cookie_source.CustomFile;
+          } else if (typeof settings.cookie_source === 'string') {
+            cookieVal = settings.cookie_source;
+          }
+
           this.state.cookieSource = cookieVal;
+          this.state.customCookiePath = customPath;
+
           const labelEl = document.getElementById('selectedCookieLabel');
           if (labelEl) {
-            labelEl.textContent = cookieVal === 'None' ? 'None (Default)' : cookieVal;
+            if (cookieVal === 'CustomFile') {
+              labelEl.textContent = 'Custom cookies.txt...';
+            } else {
+              labelEl.textContent = cookieVal === 'None' ? 'None (Default)' : cookieVal;
+            }
           }
+
+          const rowEl = document.getElementById('customCookieFileRow');
+          if (rowEl) {
+            rowEl.style.display = cookieVal === 'CustomFile' ? 'flex' : 'none';
+          }
+          this.updateCookieFileDisplay();
+
           const menuEl = document.getElementById('cookieMenu');
           if (menuEl) {
             menuEl.querySelectorAll('.glass-dropdown-item').forEach((item) => {
               const text = item.textContent.trim();
-              item.classList.toggle('active', text.includes(cookieVal));
+              if (cookieVal === 'CustomFile') {
+                item.classList.toggle('active', text.includes('Custom'));
+              } else {
+                item.classList.toggle('active', text.includes(cookieVal));
+              }
             });
           }
         }

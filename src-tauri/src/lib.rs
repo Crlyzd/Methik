@@ -10,7 +10,7 @@ use commands::system::{
     download_and_apply_update, get_app_info, get_system_paths, get_user_settings, is_dev_mode,
     log_client_event, open_appdata_folder, open_download_folder, open_logs_folder, open_media_file,
     open_url, provision_dependencies, read_clipboard, save_user_settings_command,
-    select_download_folder, uninstall_binaries,
+    select_cookie_file, select_download_folder, uninstall_binaries,
 };
 use commands::window::{
     close_window, minimize_window, set_view_window_mode, toggle_always_on_top, toggle_maximize_window,
@@ -50,6 +50,7 @@ pub fn run() {
             get_user_settings,
             save_user_settings_command,
             select_download_folder,
+            select_cookie_file,
             read_clipboard,
             is_dev_mode,
             log_client_event,

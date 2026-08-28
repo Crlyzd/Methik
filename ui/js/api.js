@@ -174,6 +174,8 @@ const Api = {
         return true;
       case 'select_download_folder':
         return 'C:/Users/Default/Desktop/MethikDownloads';
+      case 'select_cookie_file':
+        return 'C:/Users/Default/Downloads/cookies.txt';
       case 'get_video_info':
         return {
           id: 'mock_' + Math.random().toString(36).substring(7),

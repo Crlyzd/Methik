@@ -257,11 +257,28 @@
                   <div class="glass-dropdown-item" onclick="App.selectCookieSource('Brave', 'Brave Browser')">Brave Browser</div>
                   <div class="glass-dropdown-item" onclick="App.selectCookieSource('Opera', 'Opera')">Opera</div>
                   <div class="glass-dropdown-item" onclick="App.selectCookieSource('Vivaldi', 'Vivaldi')">Vivaldi</div>
+                  <div class="glass-dropdown-divider" style="margin: 4px 0; border-top: 1px solid var(--glass-border);"></div>
+                  <div class="glass-dropdown-item" onclick="App.selectCookieSource('CustomFile', 'Custom cookies.txt...')">Custom cookies.txt...</div>
                 </div>
               </div>
             </div>
+
+            <!-- Custom Cookie File Row (Displayed when Custom cookies.txt is selected) -->
+            <div id="customCookieFileRow" style="display: none; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 4px 7px; gap: 8px; margin-top: 2px;">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
+                <svg class="svg-icon svg-stroke" style="width: 12px; height: 12px; color: var(--accent-cyan); flex-shrink: 0;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span id="customCookiePathText" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;" title="No file selected">No cookies.txt selected</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                <button class="btn-browse" onclick="App.browseCookieFile()" type="button" title="Select Netscape cookies.txt file">
+                  <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  <span>Browse</span>
+                </button>
+              </div>
+            </div>
+
             <p style="font-size: 10.5px; color: var(--text-dim); margin: 0; line-height: 1.35;">
-              Imports active cookies directly from your browser to bypass bot verification and access login-restricted reels/posts on Instagram, Facebook, YouTube, etc.
+              Imports active cookies directly from your browser or a Netscape cookies.txt file to bypass bot verification and access login-restricted reels/posts on Instagram, Facebook, YouTube, etc.
             </p>
           </div>
         </div>
