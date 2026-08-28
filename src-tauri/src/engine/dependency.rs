@@ -226,11 +226,20 @@ pub fn check_deno_status() -> DependencyStatus {
     }
 }
 
-/// Inspects yt-dlp, FFmpeg, and Deno, generating a full diagnostic report
+/// Inspects yt-dlp, FFmpeg, and Deno in parallel threads, generating a full diagnostic report
 pub fn check_all_dependencies() -> SystemDependenciesReport {
-    let ytdlp = check_ytdlp_status();
-    let ffmpeg = check_ffmpeg_status();
-    let deno = check_deno_status();
+    let (ytdlp, ffmpeg, deno) = std::thread::scope(|s| {
+        let t_ytdlp = s.spawn(check_ytdlp_status);
+        let t_ffmpeg = s.spawn(check_ffmpeg_status);
+        let t_deno = s.spawn(check_deno_status);
+
+        (
+            t_ytdlp.join().unwrap_or_else(|_| check_ytdlp_status()),
+            t_ffmpeg.join().unwrap_or_else(|_| check_ffmpeg_status()),
+            t_deno.join().unwrap_or_else(|_| check_deno_status()),
+        )
+    });
+
     let all_valid = ytdlp.is_valid && ffmpeg.is_valid && deno.is_valid;
 
     SystemDependenciesReport {

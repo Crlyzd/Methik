@@ -26,6 +26,25 @@ pub fn is_update_cancelled() -> bool {
     UPDATE_CANCELLED.load(Ordering::SeqCst)
 }
 
+/// Silently removes any leftover backup executables (*.exe.old) created during past in-app updates
+pub fn cleanup_old_backup_executables() {
+    if let Ok(current_exe) = std::env::current_exe() {
+        let old_backup = current_exe.with_extension("exe.old");
+        if old_backup.exists() {
+            let _ = std::fs::remove_file(&old_backup);
+        }
+
+        if let Some(parent) = current_exe.parent() {
+            if let Some(file_name) = current_exe.file_name().and_then(|n| n.to_str()) {
+                let direct_old = parent.join(format!("{}.old", file_name));
+                if direct_old.exists() {
+                    let _ = std::fs::remove_file(&direct_old);
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppInfo {
     pub name: String,

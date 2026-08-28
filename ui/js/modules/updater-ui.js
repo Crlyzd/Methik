@@ -3,13 +3,19 @@
  */
 import { state } from './state.js';
 import { openModal } from './modal.js';
+import { renderMarkdown } from './markdown.js';
 
 export async function checkAppVersion(silent = false) {
   const textEl = document.getElementById('aboutVersionStatusText');
   const btn = document.getElementById('btnCheckAppVersion');
+  const btnText = document.getElementById('btnCheckAppVersionText');
+  const aboutBox = document.getElementById('aboutVersionBox');
+  const btnAbout = document.getElementById('btnAbout');
 
-  if (textEl) textEl.textContent = 'Checking updates...';
-  if (btn) btn.classList.add('spinning');
+  if (!silent) {
+    if (textEl) textEl.textContent = 'Checking updates...';
+    if (btn) btn.classList.add('spinning');
+  }
 
   try {
     const result = await Api.checkForUpdates();
@@ -18,10 +24,26 @@ export async function checkAppVersion(silent = false) {
     const archUpper = (result.arch || state.appInfo?.arch || 'x64').toUpperCase();
 
     if (result.has_update) {
+      // Light up the Titlebar Info/About button with glowing update badge
+      if (btnAbout) {
+        btnAbout.classList.add('has-update');
+      }
+
+      // Light up the About modal version box
+      if (aboutBox) {
+        aboutBox.classList.add('update-available');
+      }
+
       if (textEl) {
         textEl.textContent = `Update available: v${result.latest_version} (${archUpper})`;
       }
 
+      if (btn && btnText) {
+        btnText.textContent = 'View';
+        btn.onclick = () => openModal('updateModal');
+      }
+
+      // Populate Update Modal Content
       const modalTitle = document.getElementById('updateModalTitle');
       const modalSubtitle = document.getElementById('updateModalSubtitle');
       const verInfo = document.getElementById('updateVersionInfo');
@@ -42,7 +64,7 @@ export async function checkAppVersion(silent = false) {
         }
       }
       if (notesText) {
-        notesText.textContent = result.release_notes || 'No changelog notes provided for this release.';
+        notesText.innerHTML = renderMarkdown(result.release_notes || 'No changelog notes provided for this release.');
       }
 
       if (btnPerform && btnPerformText) {
@@ -57,15 +79,25 @@ export async function checkAppVersion(silent = false) {
         }
       }
 
-      openModal('updateModal');
+      // Only popup dialog automatically if user explicitly triggered check, not on silent launch
+      if (!silent) {
+        openModal('updateModal');
+      }
     } else {
+      if (btnAbout) btnAbout.classList.remove('has-update');
+      if (aboutBox) aboutBox.classList.remove('update-available');
+
       if (textEl) {
         textEl.textContent = `METHIK v${result.current_version} (${archUpper}) (Latest Version)`;
+      }
+      if (btn && btnText) {
+        btnText.textContent = 'Check';
+        btn.onclick = () => checkAppVersion(false);
       }
     }
   } catch (e) {
     console.warn('Update check failed:', e);
-    if (textEl) {
+    if (!silent && textEl) {
       textEl.textContent = 'Unable to check updates (Offline / Rate limited)';
     }
   } finally {

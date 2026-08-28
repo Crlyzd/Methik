@@ -17,10 +17,12 @@ pub struct SystemPathsInfo {
     pub config_dir: String,
 }
 
-/// Queries current status of yt-dlp and FFmpeg dependencies
+/// Queries current status of yt-dlp and FFmpeg dependencies asynchronously without blocking main thread
 #[tauri::command]
-pub fn check_system_dependencies() -> Result<SystemDependenciesReport, String> {
-    Ok(check_all_dependencies())
+pub async fn check_system_dependencies() -> Result<SystemDependenciesReport, String> {
+    tokio::task::spawn_blocking(check_all_dependencies)
+        .await
+        .map_err(|e| format!("Failed to check dependencies: {}", e))
 }
 
 use tauri::ipc::Channel;

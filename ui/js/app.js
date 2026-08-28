@@ -14,6 +14,7 @@ import * as Downloader from './modules/downloader.js';
 import * as ProvisionerUI from './modules/provisioner-ui.js';
 import * as UpdaterUI from './modules/updater-ui.js';
 import * as WindowCtrl from './modules/window.js';
+import { renderMarkdown } from './modules/markdown.js';
 
 export const App = {
   state,
@@ -22,12 +23,27 @@ export const App = {
     if (this.state.initialized) return;
     this.state.initialized = true;
 
+    // 1. Immediately register event listeners and window dragging
     this.setupEventListeners();
-    await WindowCtrl.loadAppInfo();
-    await Settings.loadUserSettings();
-    await ProvisionerUI.checkDependencies();
-    Downloader.listenToProgressEvents((prog) => ProvisionerUI.onProvisionProgress(prog));
+
+    // 2. Load essential UI metadata and settings in parallel
+    await Promise.all([
+      WindowCtrl.loadAppInfo(),
+      Settings.loadUserSettings()
+    ]);
     Queue.renderQueue();
+
+    // 3. Listen to downloader / provisioner progress events
+    Downloader.listenToProgressEvents((prog) => ProvisionerUI.onProvisionProgress(prog));
+
+    // 4. Background tasks (fully non-blocking, zero drag/UI freeze)
+    ProvisionerUI.checkDependencies().catch((err) => {
+      console.warn('[Startup Dependencies Check]', err);
+    });
+
+    UpdaterUI.checkAppVersion(true).catch((err) => {
+      console.warn('[Startup Update Check]', err);
+    });
   },
 
   setupEventListeners() {
@@ -172,6 +188,7 @@ export const App = {
   showToast: (msg, type, dur) => Toast.showToast(msg, type, dur),
   formatBytes: (b) => Formats.formatBytes(b),
   getQualityLabel: (v) => Formats.getQualityLabel(v),
+  renderMarkdown: (md) => renderMarkdown(md),
 };
 
 // Bind to window for HTML inline event compatibility

@@ -19,6 +19,9 @@ use commands::window::{
 
 /// Main entry point to initialize application directories and launch the Tauri app.
 pub fn run() {
+    // Automatically remove leftover update backups (*.exe.old) on boot
+    engine::updater::cleanup_old_backup_executables();
+
     // Initialize %LOCALAPPDATA%/curlyzed/Methik directories (logs, config) and shared bin on boot
     if let Err(err) = config::paths::ensure_app_directories() {
         eprintln!("[Methik] Warning: Failed to initialize AppData directories: {}", err);

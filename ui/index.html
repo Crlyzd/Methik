@@ -43,7 +43,7 @@
         </button>
 
         <!-- About Modal Trigger -->
-        <button class="btn-icon" onclick="App.openModal('aboutModal')" title="About Methik">
+        <button class="btn-icon" id="btnAbout" onclick="App.openModal('aboutModal')" title="About Methik">
           <svg class="svg-icon svg-stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         </button>
 
@@ -404,14 +404,14 @@
       </div>
 
       <!-- Version Status Row -->
-      <div class="version-status-box">
+      <div class="version-status-box" id="aboutVersionBox">
         <div class="version-status-left">
-          <svg class="svg-icon svg-stroke check-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <svg class="svg-icon svg-stroke check-icon" id="aboutVersionIcon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <span id="aboutVersionStatusText">METHIK v0.1 (Latest Version)</span>
         </div>
-        <button class="btn-check-version" onclick="App.checkAppVersion()">
+        <button class="btn-check-version" id="btnCheckAppVersion" onclick="App.checkAppVersion()">
           <svg class="svg-icon svg-stroke" style="width:12px; height:12px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          <span>Check</span>
+          <span id="btnCheckAppVersionText">Check</span>
         </button>
       </div>
 
@@ -662,7 +662,7 @@
 
         <div class="update-notes-container">
           <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Release Notes</span>
-          <pre class="update-notes-body" id="updateNotesText">Loading release notes...</pre>
+          <div class="update-notes-body markdown-body" id="updateNotesText">Loading release notes...</div>
         </div>
 
         <!-- Download & Install Progress Bar (Shown during update) -->

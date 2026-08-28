@@ -110,6 +110,32 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 7px 10px;
+  transition: all 0.25s ease;
+}
+
+/* Glowing Update Available State */
+.version-status-box.update-available {
+  background: rgba(255, 122, 89, 0.12);
+  border: 1px solid rgba(255, 122, 89, 0.4);
+  box-shadow: 0 0 14px rgba(255, 122, 89, 0.18), inset 0 0 8px rgba(255, 122, 89, 0.08);
+}
+
+[data-theme="light"] .version-status-box.update-available {
+  background: rgba(234, 88, 12, 0.09);
+  border: 1px solid rgba(234, 88, 12, 0.35);
+  box-shadow: 0 0 12px rgba(234, 88, 12, 0.15);
+}
+
+.version-status-box.update-available .version-status-left {
+  color: var(--accent-cyan);
+}
+
+.version-status-box.update-available .check-icon {
+  color: #ff7a59;
+}
+
+[data-theme="light"] .version-status-box.update-available .check-icon {
+  color: #ea580c;
 }
 
 .version-status-left {
@@ -125,6 +151,7 @@
   width: 14px;
   height: 14px;
   color: var(--status-valid);
+  transition: color 0.2s ease;
 }
 
 .btn-check-version {
@@ -145,6 +172,19 @@
 .btn-check-version:hover {
   background: rgba(255, 255, 255, 0.16);
   border-color: rgba(255, 255, 255, 0.25);
+}
+
+.version-status-box.update-available .btn-check-version {
+  background: var(--accent-gradient);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 122, 89, 0.35);
+}
+
+.version-status-box.update-available .btn-check-version:hover {
+  background: var(--accent-gradient-hover, var(--accent-gradient));
+  box-shadow: 0 4px 14px rgba(255, 122, 89, 0.55);
+  transform: translateY(-1px);
 }
 
 /* About Action Buttons Grid (Report Bug & Open Logs) */

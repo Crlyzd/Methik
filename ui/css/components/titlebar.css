@@ -116,6 +116,81 @@
   box-shadow: 0 0 10px rgba(255, 133, 102, 0.25);
 }
 
+/* Update Available Glowing & Pulsing (i) Icon */
+.btn-icon.has-update {
+  color: #ff7a59;
+  background: rgba(255, 122, 89, 0.12);
+  box-shadow: 0 0 10px rgba(255, 122, 89, 0.25);
+  animation: updatePulseGlow 2.4s infinite ease-in-out;
+}
+
+.btn-icon.has-update svg {
+  color: #ff7a59;
+  filter: drop-shadow(0 0 4px rgba(255, 122, 89, 0.7));
+  animation: updatePulseIcon 2.4s infinite ease-in-out;
+}
+
+[data-theme="light"] .btn-icon.has-update {
+  color: #ea580c;
+  background: rgba(234, 88, 12, 0.1);
+  box-shadow: 0 0 8px rgba(234, 88, 12, 0.2);
+  animation: updatePulseGlowLight 2.4s infinite ease-in-out;
+}
+
+[data-theme="light"] .btn-icon.has-update svg {
+  color: #ea580c;
+  filter: drop-shadow(0 0 3px rgba(234, 88, 12, 0.6));
+  animation: updatePulseIconLight 2.4s infinite ease-in-out;
+}
+
+@keyframes updatePulseIcon {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(255, 122, 89, 0.5));
+    transform: scale(1);
+    color: #ff8566;
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 122, 89, 0.95)) drop-shadow(0 0 14px rgba(255, 122, 89, 0.6));
+    transform: scale(1.08);
+    color: #ff552e;
+  }
+}
+
+@keyframes updatePulseIconLight {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(234, 88, 12, 0.4));
+    transform: scale(1);
+    color: #ea580c;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(234, 88, 12, 0.85)) drop-shadow(0 0 10px rgba(234, 88, 12, 0.45));
+    transform: scale(1.08);
+    color: #c2410c;
+  }
+}
+
+@keyframes updatePulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 122, 89, 0.2);
+    background: rgba(255, 122, 89, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 122, 89, 0.45);
+    background: rgba(255, 122, 89, 0.22);
+  }
+}
+
+@keyframes updatePulseGlowLight {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(234, 88, 12, 0.15);
+    background: rgba(234, 88, 12, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(234, 88, 12, 0.35);
+    background: rgba(234, 88, 12, 0.18);
+  }
+}
+
 .titlebar-divider {
   width: 1px;
   height: 14px;
