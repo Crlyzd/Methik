@@ -8,7 +8,7 @@ use commands::metadata::{get_playlist_info, get_video_info};
 use commands::system::{
     cancel_provisioning, cancel_update, check_for_updates, check_system_dependencies,
     download_and_apply_update, get_app_info, get_system_paths, get_user_settings, is_dev_mode,
-    log_client_event, open_appdata_folder, open_download_folder, open_logs_folder, open_media_file,
+    log_client_event, open_appdata_folder, open_bin_folder, open_download_folder, open_logs_folder, open_media_file,
     open_url, provision_dependencies, read_clipboard, save_user_settings_command,
     select_cookie_file, select_download_folder, uninstall_binaries,
 };
@@ -18,7 +18,7 @@ use commands::window::{
 
 /// Main entry point to initialize application directories and launch the Tauri app.
 pub fn run() {
-    // Initialize %APPDATA%/Methik directories (bin, logs, config) on boot
+    // Initialize %LOCALAPPDATA%/curlyzed/Methik directories (logs, config) and shared bin on boot
     if let Err(err) = config::paths::ensure_app_directories() {
         eprintln!("[Methik] Warning: Failed to initialize AppData directories: {}", err);
     }
@@ -41,6 +41,7 @@ pub fn run() {
             provision_dependencies,
             cancel_provisioning,
             open_appdata_folder,
+            open_bin_folder,
             open_logs_folder,
             open_download_folder,
             open_media_file,

@@ -320,14 +320,22 @@
             <span id="btnEngineProvisionIcon" style="display:flex; align-items:center;">
               <svg class="svg-icon svg-stroke" style="width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </span>
-            <span id="btnEngineProvisionText">Install / Update Binaries to AppData</span>
+            <span id="btnEngineProvisionText">Install / Update Core Binaries</span>
           </button>
         </div>
 
-        <!-- Simplified AppData Link Footnote -->
-        <p class="engine-footnote">
-          Downloads and installs binaries directly into <a class="appdata-link" onclick="App.openAppData()">AppData</a>.
-        </p>
+        <!-- Sleek Frosted Glass Storage Chips -->
+        <div class="engine-storage-footer">
+          <span class="engine-storage-label">Storage:</span>
+          <button type="button" class="btn-storage-chip" onclick="App.openBinFolder()" title="Open shared binary directory (AppData/Local/curlyzed/bin)">
+            <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>curlyzed/bin</span>
+          </button>
+          <button type="button" class="btn-storage-chip" onclick="App.openAppData()" title="Open Methik data directory (AppData/Local/curlyzed/Methik)">
+            <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>curlyzed/Methik</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -406,7 +414,7 @@
       <div class="badge-active-engine">
         <div style="display:flex; align-items:center; gap:6px;">
           <svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>Active Engine: Isolated AppData</span>
+          <span>Shared Library: %LOCALAPPDATA%/curlyzed/bin</span>
         </div>
         <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--status-valid);">(yt-dlp + FFmpeg + Deno)</span>
       </div>
@@ -454,7 +462,7 @@
 
         <div class="confirm-location-note">
           <svg class="svg-icon svg-stroke" style="width:13px; height:13px; color: var(--text-muted);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <span id="provisionConfirmLocationText">Installed isolated into <code>%APPDATA%/Methik/bin</code>. No system path modifications.</span>
+          <span id="provisionConfirmLocationText">Installed into shared <code>%LOCALAPPDATA%/curlyzed/bin</code>. No system path modifications.</span>
         </div>
 
         <div class="confirm-modal-actions">
@@ -478,7 +486,7 @@
           <div class="spinner-ring" id="provSpinner"></div>
           <div>
             <h3 class="modal-title" id="provTitle">Downloading Dependencies...</h3>
-            <p class="modal-subtitle" id="provSubtitle">Downloading portable binaries into AppData...</p>
+            <p class="modal-subtitle" id="provSubtitle">Downloading portable binaries into %LOCALAPPDATA%/curlyzed/bin...</p>
           </div>
         </div>
         <button class="btn-close" onclick="App.promptCancelProvisioning()">

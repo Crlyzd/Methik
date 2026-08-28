@@ -109,7 +109,7 @@ function Run-Tests {
 }
 
 function Open-AppDataFolder {
-    $appDataPath = [System.IO.Path]::Combine($env:APPDATA, "Methik")
+    $appDataPath = [System.IO.Path]::Combine($env:LOCALAPPDATA, "curlyzed", "Methik")
     if (-not (Test-Path $appDataPath)) {
         New-Item -ItemType Directory -Path $appDataPath -Force | Out-Null
     }
@@ -161,7 +161,7 @@ while ($true) {
     Write-Host "  3. Build Multi-Arch Releases (x64 + ARM64 simultaneously)" -ForegroundColor Cyan
     Write-Host "  4. Bump Application Version (1-Click)" -ForegroundColor Yellow
     Write-Host "  5. Run Unit Test Suite" -ForegroundColor White
-    Write-Host "  6. Open Isolated %APPDATA%/Methik Folder" -ForegroundColor White
+    Write-Host "  6. Open %LOCALAPPDATA%/curlyzed/Methik Folder" -ForegroundColor White
     Write-Host "  7. Clean Target Build Cache" -ForegroundColor White
     Write-Host "  0. Exit" -ForegroundColor DarkGray
     Write-Host ""

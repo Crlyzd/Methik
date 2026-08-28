@@ -150,17 +150,17 @@ const Api = {
         return null;
       case 'check_system_dependencies':
         return {
-          ytdlp: { name: 'yt-dlp', is_installed: true, version: '2026.02.14', path: '%APPDATA%/Methik/bin/yt-dlp.exe', is_valid: true, min_version_required: '2024.01.01', source: 'AppData' },
-          ffmpeg: { name: 'FFmpeg', is_installed: true, version: '7.1', path: '%APPDATA%/Methik/bin/ffmpeg.exe', is_valid: true, min_version_required: '5.0', source: 'AppData' },
-          deno: { name: 'Deno', is_installed: true, version: '2.2.3', path: '%APPDATA%/Methik/bin/deno.exe', is_valid: true, min_version_required: '1.30.0', source: 'AppData' },
+          ytdlp: { name: 'yt-dlp', is_installed: true, version: '2026.02.14', path: '%LOCALAPPDATA%/curlyzed/bin/yt-dlp.exe', is_valid: true, min_version_required: '2024.01.01', source: 'Shared (curlyzed)' },
+          ffmpeg: { name: 'FFmpeg', is_installed: true, version: '7.1', path: '%LOCALAPPDATA%/curlyzed/bin/ffmpeg.exe', is_valid: true, min_version_required: '5.0', source: 'Shared (curlyzed)' },
+          deno: { name: 'Deno', is_installed: true, version: '2.2.3', path: '%LOCALAPPDATA%/curlyzed/bin/deno.exe', is_valid: true, min_version_required: '1.30.0', source: 'Shared (curlyzed)' },
           all_valid: true
         };
       case 'get_system_paths':
         return {
-          appdata_dir: '%APPDATA%/Methik',
-          bin_dir: '%APPDATA%/Methik/bin',
-          logs_dir: '%APPDATA%/Methik/logs',
-          config_dir: '%APPDATA%/Methik/config'
+          appdata_dir: '%LOCALAPPDATA%/curlyzed/Methik',
+          bin_dir: '%LOCALAPPDATA%/curlyzed/bin',
+          logs_dir: '%LOCALAPPDATA%/curlyzed/Methik/logs',
+          config_dir: '%LOCALAPPDATA%/curlyzed/Methik/config'
         };
       case 'get_user_settings':
         return {

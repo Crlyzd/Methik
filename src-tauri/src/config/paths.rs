@@ -1,25 +1,25 @@
 use std::fs;
 use std::path::PathBuf;
 
-/// Returns the primary application data directory: `%APPDATA%/Methik` (Windows) or `~/.local/share/Methik` (Unix).
-pub fn get_appdata_dir() -> PathBuf {
-    if let Some(base) = dirs::data_dir() {
-        base.join("Methik")
-    } else {
-        // Fallback to home directory if OS appdata cannot be resolved
-        dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(".methik")
-    }
-}
-
 /// Returns the shared application data root: `%LOCALAPPDATA%/curlyzed` (Windows) or `~/.local/share/curlyzed` (Unix).
 pub fn get_shared_curlyzed_dir() -> PathBuf {
     if let Some(base) = dirs::data_local_dir() {
         base.join("curlyzed")
     } else {
-        get_appdata_dir()
+        dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join(".curlyzed")
     }
+}
+
+/// Returns the primary application data directory: `%LOCALAPPDATA%/curlyzed/Methik` (Windows) or `~/.local/share/curlyzed/Methik` (Unix).
+pub fn get_appdata_dir() -> PathBuf {
+    get_shared_curlyzed_dir().join("Methik")
+}
+
+/// Returns the legacy Roaming directory: `%APPDATA%/Methik` (for backward compatibility migration)
+pub fn get_legacy_roaming_dir() -> Option<PathBuf> {
+    dirs::data_dir().map(|d| d.join("Methik"))
 }
 
 /// Returns the shared binary directory: `%LOCALAPPDATA%/curlyzed/bin`
@@ -29,15 +29,21 @@ pub fn get_bin_dir() -> PathBuf {
 
 /// Returns the legacy isolated Methik binary directory: `%APPDATA%/Methik/bin` (for backward compatibility fallback)
 pub fn get_legacy_appdata_bin_dir() -> PathBuf {
+    if let Some(roaming) = get_legacy_roaming_dir() {
+        let r_bin = roaming.join("bin");
+        if r_bin.exists() {
+            return r_bin;
+        }
+    }
     get_appdata_dir().join("bin")
 }
 
-/// Returns the application logs directory: `%APPDATA%/Methik/logs`
+/// Returns the application logs directory: `%LOCALAPPDATA%/curlyzed/Methik/logs`
 pub fn get_logs_dir() -> PathBuf {
     get_appdata_dir().join("logs")
 }
 
-/// Returns the application configuration directory: `%APPDATA%/Methik/config`
+/// Returns the application configuration directory: `%LOCALAPPDATA%/curlyzed/Methik/config`
 pub fn get_config_dir() -> PathBuf {
     get_appdata_dir().join("config")
 }
@@ -110,7 +116,7 @@ pub fn get_default_download_dir() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-/// Reads the user settings from %APPDATA%/Methik/config/settings.json or returns defaults
+/// Reads the user settings from %LOCALAPPDATA%/curlyzed/Methik/config/settings.json or returns defaults
 pub fn load_user_settings() -> crate::core::models::UserSettings {
     let settings_path = get_settings_file_path();
     if settings_path.exists() {
@@ -120,6 +126,20 @@ pub fn load_user_settings() -> crate::core::models::UserSettings {
                     settings.download_dir = get_default_download_dir().to_string_lossy().to_string();
                 }
                 return settings;
+            }
+        }
+    } else if let Some(legacy_dir) = get_legacy_roaming_dir() {
+        let legacy_settings = legacy_dir.join("config").join("settings.json");
+        if legacy_settings.exists() {
+            if let Ok(content) = fs::read_to_string(&legacy_settings) {
+                if let Ok(mut settings) = serde_json::from_str::<crate::core::models::UserSettings>(&content) {
+                    if settings.download_dir.trim().is_empty() {
+                        settings.download_dir = get_default_download_dir().to_string_lossy().to_string();
+                    }
+                    // Auto-migrate to new local path
+                    let _ = save_user_settings(&settings);
+                    return settings;
+                }
             }
         }
     }
@@ -223,7 +243,8 @@ mod tests {
     #[test]
     fn test_path_resolution() {
         let app_dir = get_appdata_dir();
-        assert!(app_dir.to_string_lossy().contains("Methik") || app_dir.to_string_lossy().contains(".methik"));
+        assert!(app_dir.to_string_lossy().contains("Methik"));
+        assert!(app_dir.to_string_lossy().contains("curlyzed"));
 
         let shared_dir = get_shared_curlyzed_dir();
         assert!(shared_dir.to_string_lossy().contains("curlyzed"));

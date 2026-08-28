@@ -75,14 +75,21 @@ pub fn cancel_provisioning() -> Result<(), String> {
     Ok(())
 }
 
-/// Opens the %APPDATA%/Methik directory in OS file manager
+/// Opens the %LOCALAPPDATA%/curlyzed/Methik directory in OS file manager
 #[tauri::command]
 pub fn open_appdata_folder() -> Result<(), String> {
     let path = get_appdata_dir();
     open_folder_in_os(&path.to_string_lossy())
 }
 
-/// Opens the %APPDATA%/Methik/logs directory in OS file manager
+/// Opens the shared %LOCALAPPDATA%/curlyzed/bin directory in OS file manager
+#[tauri::command]
+pub fn open_bin_folder() -> Result<(), String> {
+    let path = get_bin_dir();
+    open_folder_in_os(&path.to_string_lossy())
+}
+
+/// Opens the %LOCALAPPDATA%/curlyzed/Methik/logs directory in OS file manager
 #[tauri::command]
 pub fn open_logs_folder() -> Result<(), String> {
     let path = get_logs_dir();

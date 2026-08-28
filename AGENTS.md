@@ -35,12 +35,12 @@ graph LR
 
 1. **100% Portability & Shared Library Architecture**:
    - The user does **NOT** need to manually install Python, `yt-dlp`, or `ffmpeg` to their system `$PATH`.
-   - External binaries are shared across apps in `%LOCALAPPDATA%/curlyzed/bin/` (and `%LOCALAPPDATA%/curlyzed/`) to prevent duplicate storage.
-   - Methik maintains isolated logs and settings in `%APPDATA%/Methik/` (`logs/`, `config/settings.json`).
-   - The application includes an auto-provisioner module that silently/transparently downloads and verifies `yt-dlp.exe`, `ffmpeg.exe`, `ffprobe.exe`, and `deno.exe` directly into the shared library directory.
+   - External binaries are shared across curlyzed apps in `%LOCALAPPDATA%/curlyzed/bin/` (and `%LOCALAPPDATA%/curlyzed/`) to prevent duplicate storage.
+   - Methik maintains isolated logs and settings in `%LOCALAPPDATA%/curlyzed/Methik/` (`logs/`, `config/settings.json`, `updates/`).
+   - The application includes an auto-provisioner module that silently/transparently downloads and verifies `yt-dlp.exe`, `ffmpeg.exe`, `ffprobe.exe`, and `deno.exe` directly into the shared library directory (`%LOCALAPPDATA%/curlyzed/bin/`).
    - **Priority Binary Resolution**:
      1. `%LOCALAPPDATA%/curlyzed/bin/` and `%LOCALAPPDATA%/curlyzed/` (Shared curlyzed libraries)
-     2. `%APPDATA%/Methik/bin/` (Isolated Methik AppData fallback)
+     2. `%LOCALAPPDATA%/curlyzed/Methik/bin/` & `%APPDATA%/Methik/bin/` (Isolated Methik AppData fallback)
      3. Executable relative `./bin/` (Portable USB drive mode)
      4. System `$PATH` fallback
 

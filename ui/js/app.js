@@ -1119,7 +1119,7 @@ const App = {
       }
 
       if (locationTextEl) {
-        locationTextEl.innerHTML = `Installed isolated into <code>%APPDATA%/Methik/bin</code> (~${totalEstMB} MB). No system path modifications.`;
+        locationTextEl.innerHTML = `Installed into shared <code>%LOCALAPPDATA%/curlyzed/bin</code> (~${totalEstMB} MB). No system path modifications.`;
       }
 
       this.openModal('provisionConfirmModal');
@@ -1283,6 +1283,14 @@ const App = {
       await Api.invoke('open_appdata_folder');
     } catch (e) {
       console.error('Failed to open AppData folder:', e);
+    }
+  },
+
+  async openBinFolder() {
+    try {
+      await Api.invoke('open_bin_folder');
+    } catch (e) {
+      console.error('Failed to open bin folder:', e);
     }
   },
 
