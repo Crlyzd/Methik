@@ -16,6 +16,8 @@ const App = {
     appInfo: null,
     updateInfo: null,
     isUpdating: false,
+    isPaused: false,
+    globalQuality: '1080p',
   },
 
   async init() {
@@ -407,6 +409,81 @@ const App = {
     });
   },
 
+  toggleGlobalDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('globalFormatDropdown');
+    const isOpen = dropdown && dropdown.classList.contains('open');
+
+    this.closeAllDropdowns();
+
+    if (!isOpen && dropdown) {
+      this.renderGlobalDropdown();
+      dropdown.classList.add('open');
+    }
+  },
+
+  renderGlobalDropdown() {
+    const menuEl = document.getElementById('globalFormatMenu');
+    if (!menuEl) return;
+
+    const videoQualities = ['4k', '2k', '1080p', '720p', '480p'];
+    const audioQualities = ['audio_mp3', 'audio_flac'];
+    const current = this.state.globalQuality || '1080p';
+
+    let html = '<div class="dropdown-header-label" style="padding: 4px 8px; font-size: 9.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Apply to all items</div>';
+
+    videoQualities.forEach((q) => {
+      const active = current === q ? 'active' : '';
+      const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      html += `
+        <div class="glass-dropdown-item ${active}" onclick="App.applyQualityToAll('${q}', event)">
+          <div class="dropdown-item-content">
+            <span class="dropdown-item-label">${this.getQualityLabel(q)}</span>
+          </div>
+          ${checkIcon}
+        </div>
+      `;
+    });
+
+    html += '<div class="glass-dropdown-divider"></div>';
+
+    audioQualities.forEach((q) => {
+      const active = current === q ? 'active' : '';
+      const checkIcon = active ? '<svg class="svg-icon svg-stroke item-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      html += `
+        <div class="glass-dropdown-item ${active}" onclick="App.applyQualityToAll('${q}', event)">
+          <div class="dropdown-item-content">
+            <span class="dropdown-item-label">${this.getQualityLabel(q)}</span>
+          </div>
+          ${checkIcon}
+        </div>
+      `;
+    });
+
+    menuEl.innerHTML = html;
+  },
+
+  applyQualityToAll(qualityKey, event) {
+    if (event) event.stopPropagation();
+    if (!qualityKey) return;
+    this.state.globalQuality = qualityKey;
+
+    // 1. Update quality for all queued items
+    this.state.queue.forEach((item) => {
+      item.selectedQuality = qualityKey;
+    });
+
+    // 2. Update global trigger label (Clean format without "All:")
+    const globalLabel = document.getElementById('globalFormatLabel');
+    if (globalLabel) {
+      globalLabel.textContent = this.getQualityLabel(qualityKey);
+    }
+
+    // 3. Re-render queue so all tiles, dropdowns, and size badges reflect the change
+    this.renderQueue();
+    this.closeAllDropdowns();
+  },
+
   selectQuality(id, value, event) {
     if (event) event.stopPropagation();
     const item = this.state.queue.find((q) => q.id === id);
@@ -643,8 +720,8 @@ const App = {
               duration: entry.formatted_duration || '--:--',
               durationSeconds: entry.duration_seconds || this.parseDurationToSeconds(entry.formatted_duration),
               channel: playlist.title || 'Playlist Item',
-              views: 'Playlist entry',
-              selectedQuality: '1080p',
+              views: '',
+              selectedQuality: this.state.globalQuality || '1080p',
               checked: true,
               status: 'ready',
               progress: 0,
@@ -657,7 +734,10 @@ const App = {
         const meta = await Api.invoke('get_video_info', { url });
         if (meta) {
           const availableQualities = this.extractAvailableQualities(meta.formats);
-          const defaultQuality = availableQualities.includes('1080p') ? '1080p' : (availableQualities.find(q => !q.startsWith('audio_')) || '1080p');
+          const currentGlobal = this.state.globalQuality || '1080p';
+          const defaultQuality = availableQualities.includes(currentGlobal)
+            ? currentGlobal
+            : (availableQualities.includes('1080p') ? '1080p' : (availableQualities.find((q) => !q.startsWith('audio_')) || '1080p'));
           this.addQueueItem({
             id: 'vid_' + (meta.id || Math.random().toString(36).substring(7)),
             videoId: meta.id || '',
@@ -823,6 +903,8 @@ const App = {
         <svg class="svg-icon svg-stroke" style="width:11px; height:11px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span>Failed (View Log)</span>
       </button>`;
+    } else if (item.status === 'paused') {
+      return '<svg class="svg-icon svg-stroke status-icon" style="color:var(--status-warning);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg><span>Paused</span>';
     } else if (item.status === 'waiting') {
       return '<span style="color: var(--text-dim);">Queued (Waiting)</span>';
     }
@@ -856,6 +938,11 @@ const App = {
     this.renderQueue();
   },
 
+  toggleSelectAll() {
+    const allChecked = this.state.queue.length > 0 && this.state.queue.every((item) => item.checked);
+    this.selectAll(!allChecked);
+  },
+
   clearQueue() {
     if (this.state.isDownloading) {
       this.showError({
@@ -877,40 +964,83 @@ const App = {
     const badge = document.getElementById('queueBadge');
     if (badge) badge.textContent = `${total} Item${total === 1 ? '' : 's'}`;
 
+    const btnToggleSelect = document.getElementById('btnToggleSelectAll');
+    if (btnToggleSelect) {
+      const allChecked = total > 0 && checked === total;
+      btnToggleSelect.innerHTML = `<span>${allChecked ? 'Deselect All' : 'Select All'}</span>`;
+    }
+
     const summary = document.getElementById('queueSummary');
     if (summary) summary.textContent = `${checked} of ${total} selected`;
 
     const btnDownload = document.getElementById('btnDownloadQueue');
     const btnText = document.getElementById('btnDownloadQueueText');
     const btnIcon = document.getElementById('btnDownloadQueueIcon');
+    const btnCancel = document.getElementById('btnCancelQueue');
 
     if (btnDownload && btnText) {
       if (this.state.isDownloading) {
         btnDownload.disabled = false;
-        btnDownload.classList.add('btn-cancel-active');
-        btnDownload.title = 'Click to stop / cancel active download queue';
-        btnText.textContent = 'Cancel Download';
+        btnDownload.className = 'btn-download-primary btn-pause-active';
+        btnDownload.title = 'Pause active downloads (preserves progress)';
+        btnText.textContent = 'Pause Download';
         if (btnIcon) {
-          btnIcon.innerHTML = '<svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/></svg>';
+          btnIcon.innerHTML = '<svg class="svg-icon svg-stroke" style="width:13px; height:13px;" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
         }
+        if (btnCancel) btnCancel.style.display = 'inline-flex';
+      } else if (this.state.isPaused) {
+        btnDownload.disabled = activeChecked === 0;
+        btnDownload.className = 'btn-download-primary btn-resume-active';
+        btnDownload.title = 'Resume paused download queue';
+        btnText.textContent = 'Resume Download';
+        if (btnIcon) {
+          btnIcon.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        }
+        if (btnCancel) btnCancel.style.display = 'inline-flex';
       } else {
         btnDownload.disabled = activeChecked === 0;
-        btnDownload.classList.remove('btn-cancel-active');
+        btnDownload.className = 'btn-download-primary';
         btnDownload.title = activeChecked > 0 ? `Download ${activeChecked} selected stream${activeChecked === 1 ? '' : 's'}` : 'No uncompleted items selected';
         btnText.textContent = `Download (${activeChecked})`;
         if (btnIcon) {
           btnIcon.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
         }
+        if (btnCancel) btnCancel.style.display = 'none';
       }
     }
   },
 
   async onMainDownloadButtonClick() {
     if (this.state.isDownloading) {
-      await this.cancelQueueDownload();
+      await this.pauseQueueDownload();
+    } else if (this.state.isPaused) {
+      await this.resumeQueueDownload();
     } else {
       await this.startQueueDownload();
     }
+  },
+
+  async pauseQueueDownload() {
+    try {
+      await Api.invoke('cancel_download');
+    } catch (e) {
+      console.warn('pause error:', e);
+    } finally {
+      this.state.isDownloading = false;
+      this.state.isPaused = true;
+      this.state.queue.forEach((q) => {
+        if (q.status === 'downloading' || q.status === 'waiting') {
+          q.status = 'paused';
+          this.updateTileProgressDOM(q);
+        }
+      });
+      this.updateSummary();
+    }
+  },
+
+  async resumeQueueDownload() {
+    this.state.isPaused = false;
+    await this.startQueueDownload();
   },
 
   async cancelQueueDownload() {
@@ -920,8 +1050,9 @@ const App = {
       console.warn('cancel_download error:', e);
     } finally {
       this.state.isDownloading = false;
+      this.state.isPaused = false;
       this.state.queue.forEach((q) => {
-        if (q.status === 'downloading' || q.status === 'waiting') {
+        if (q.status === 'downloading' || q.status === 'waiting' || q.status === 'paused') {
           q.status = 'ready';
           this.updateTileProgressDOM(q);
         }
@@ -1067,6 +1198,9 @@ const App = {
       } else if (item.status === 'finished') {
         fillEl.style.width = '100%';
         fillEl.style.background = 'var(--status-valid)';
+      } else if (item.status === 'paused') {
+        fillEl.style.width = `${item.progress || 0}%`;
+        fillEl.style.background = 'var(--status-warning)';
       } else {
         fillEl.style.width = `${item.progress}%`;
         fillEl.style.background = 'var(--accent-gradient)';
@@ -1081,6 +1215,9 @@ const App = {
       } else if (item.status === 'finished') {
         pctEl.textContent = '100%';
         pctEl.style.color = 'var(--status-valid)';
+      } else if (item.status === 'paused') {
+        pctEl.textContent = item.progress > 0 ? `Paused (${item.progress.toFixed(1)}%)` : 'Paused';
+        pctEl.style.color = 'var(--status-warning)';
       } else if (item.status === 'downloading') {
         pctEl.textContent = `${item.progress.toFixed(1)}%`;
         pctEl.style.color = 'var(--accent-cyan)';
@@ -1693,6 +1830,9 @@ const App = {
     const modalSubtitle = document.getElementById('errorModalSubtitle');
     const modalLog = document.getElementById('errorModalLogText');
     const mitigationCard = document.getElementById('errorMitigationCard');
+    const mitigationTitle = document.getElementById('mitigationTitle');
+    const mitigationText = document.getElementById('mitigationText');
+    const btnMitigationLabel = document.getElementById('btnMitigationLabel');
 
     if (modalTitle) modalTitle.textContent = title || 'Operation Failed';
     if (modalSubtitle) modalSubtitle.textContent = message || 'An error occurred while processing your request';
@@ -1702,13 +1842,59 @@ const App = {
       : 'No detailed diagnostic log available.';
     if (modalLog) modalLog.textContent = detailsStr;
 
-    // Smart bot check / cookies challenge detection
-    const isBotChallenge = /sign in to confirm you'?re not a bot|--cookies|cookie/i.test(detailsStr);
+    // Smart context-aware diagnostic resolution
+    let mitigation = null;
+    if (/could not copy chrome cookie database|database is locked/i.test(detailsStr)) {
+      mitigation = {
+        title: 'Chrome Cookie Database Locked',
+        text: 'Google Chrome is locking its cookie database while running. Close Chrome, switch to Firefox in Preferences, or select "None" for public videos.',
+        button: 'Open Preferences',
+        action: () => this.openCookieSettings(),
+      };
+    } else if (/the page needs to be reloaded/i.test(detailsStr)) {
+      mitigation = {
+        title: 'Invalid or Stale Session Cookies',
+        text: 'YouTube rejected the active session cookies. If downloading a public video, switch Cookie Source to "None" in Preferences, or export a fresh cookies.txt file.',
+        button: 'Open Cookie Preferences',
+        action: () => this.openCookieSettings(),
+      };
+    } else if (/HTTP Error 403: Forbidden|403: Forbidden/i.test(detailsStr)) {
+      mitigation = {
+        title: 'Stream Access Forbidden (403)',
+        text: 'YouTube signature challenge or CDN rejected the stream. Ensure Deno is up to date in Preferences, or try setting Cookie Source to "None".',
+        button: 'Open Engine Preferences',
+        action: () => this.openCookieSettings(),
+      };
+    } else if (/sign in to confirm you'?re not a bot|--cookies|cookie/i.test(detailsStr)) {
+      mitigation = {
+        title: 'Bot Verification Required',
+        text: 'Platform requires session verification to bypass bot detection. Select your browser or cookies.txt in Preferences.',
+        button: 'Configure Browser Cookies',
+        action: () => this.openCookieSettings(),
+      };
+    }
+
     if (mitigationCard) {
-      mitigationCard.style.display = isBotChallenge ? 'flex' : 'none';
+      if (mitigation) {
+        mitigationCard.style.display = 'flex';
+        if (mitigationTitle) mitigationTitle.textContent = mitigation.title;
+        if (mitigationText) mitigationText.textContent = mitigation.text;
+        if (btnMitigationLabel) btnMitigationLabel.textContent = mitigation.button;
+        const btn = document.getElementById('btnMitigationAction');
+        if (btn) {
+          btn.onclick = mitigation.action;
+        }
+      } else {
+        mitigationCard.style.display = 'none';
+      }
     }
 
     this.openModal('errorModal');
+  },
+
+  openCookieSettings() {
+    this.closeModal('errorModal');
+    this.openModal('settingsModal');
   },
 
   copyErrorLog() {

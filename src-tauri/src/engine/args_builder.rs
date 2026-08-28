@@ -41,6 +41,14 @@ pub fn append_cookie_args(args: &mut Vec<String>, cookie_source: Option<&CookieS
     }
 }
 
+/// Appends resilient YouTube extractor client arguments and enables Deno challenge solver scripts
+pub fn append_resilient_extractor_args(args: &mut Vec<String>) {
+    args.push("--remote-components".to_string());
+    args.push("ejs:github".to_string());
+    args.push("--extractor-args".to_string());
+    args.push("youtube:player_client=default,web,android".to_string());
+}
+
 /// Builds CLI arguments for fetching single video metadata as JSON
 pub fn build_video_metadata_args(url: &str, cookie_source: Option<&CookieSource>) -> Vec<String> {
     let mut args = vec![
@@ -50,6 +58,7 @@ pub fn build_video_metadata_args(url: &str, cookie_source: Option<&CookieSource>
         "--skip-download".to_string(),
         "--ignore-no-formats-error".to_string(),
     ];
+    append_resilient_extractor_args(&mut args);
     append_cookie_args(&mut args, cookie_source);
     args.push(url.to_string());
     args
@@ -64,6 +73,7 @@ pub fn build_playlist_metadata_args(url: &str, cookie_source: Option<&CookieSour
         "--skip-download".to_string(),
         "--ignore-no-formats-error".to_string(),
     ];
+    append_resilient_extractor_args(&mut args);
     append_cookie_args(&mut args, cookie_source);
     args.push(url.to_string());
     args
@@ -80,7 +90,10 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
     args.push("--ffmpeg-location".to_string());
     args.push(ffmpeg_loc.to_string_lossy().to_string());
 
-    // 2. Output template
+    // 2. Resilient extractor args
+    append_resilient_extractor_args(&mut args);
+
+    // 3. Output template
     let base_dir = match &options.output_dir {
         Some(dir) if !dir.trim().is_empty() && dir.trim() != "Desktop" => PathBuf::from(dir),
         _ => crate::config::paths::get_default_download_dir(),
@@ -94,7 +107,7 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
     args.push("-o".to_string());
     args.push(output_template);
 
-    // 3. Audio extraction vs Video format selection
+    // 4. Audio extraction vs Video format selection
     if options.audio_only {
         args.push("-x".to_string());
         let fmt = match options.audio_format.as_ref().unwrap_or(&AudioFormat::Mp3) {
@@ -132,7 +145,7 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         args.push("mp4".to_string());
     }
 
-    // 4. Metadata & Thumbnails
+    // 5. Metadata & Thumbnails
     if options.embed_metadata {
         args.push("--embed-metadata".to_string());
     }
@@ -140,7 +153,7 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         args.push("--embed-thumbnail".to_string());
     }
 
-    // 5. Playlist item filter if specified
+    // 6. Playlist item filter if specified
     if let Some(indices) = &options.playlist_indices {
         if !indices.is_empty() {
             let items_str = indices
@@ -153,10 +166,10 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         }
     }
 
-    // 6. Cookies Authentication
+    // 7. Cookies Authentication
     append_cookie_args(&mut args, options.cookie_source.as_ref());
 
-    // 7. Real-time progress output flags
+    // 8. Real-time progress output flags
     args.push("--no-colors".to_string());
     args.push("--progress".to_string());
     args.push("--newline".to_string());
@@ -166,7 +179,7 @@ pub fn build_download_args(options: &DownloadOptions) -> Vec<String> {
         TAG = PROGRESS_PREFIX
     ));
 
-    // 8. General flags
+    // 9. General flags
     args.push("--no-warnings".to_string());
     args.push(options.url.clone());
 
