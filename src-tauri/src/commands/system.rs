@@ -224,7 +224,7 @@ if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     Write-Output $dialog.SelectedPath
 }
 "#;
-            let output = Command::new("powershell")
+            let output = crate::engine::process::new_command("powershell")
                 .args(["-NoProfile", "-NonInteractive", "-Command", script])
                 .output()
                 .map_err(|e| format!("Failed to open folder picker: {}", e))?;
@@ -262,7 +262,7 @@ if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     Write-Output $dialog.FileName
 }
 "#;
-            let output = Command::new("powershell")
+            let output = crate::engine::process::new_command("powershell")
                 .args(["-NoProfile", "-NonInteractive", "-Command", script])
                 .output()
                 .map_err(|e| format!("Failed to open file picker: {}", e))?;
@@ -289,7 +289,7 @@ if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
 pub fn open_url(url: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        Command::new("rundll32")
+        crate::engine::process::new_command("rundll32")
             .args(["url.dll,FileProtocolHandler", &url])
             .spawn()
             .map_err(|e| format!("Failed to open URL in browser: {}", e))?;
@@ -339,7 +339,7 @@ fn open_folder_in_os(path_str: &str) -> Result<(), String> {
 fn open_file_in_os(path_str: &str) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        Command::new("cmd")
+        crate::engine::process::new_command("cmd")
             .args(["/c", "start", "", path_str])
             .spawn()
             .map_err(|e| format!("Failed to open file: {}", e))?;

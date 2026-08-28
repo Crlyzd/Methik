@@ -83,7 +83,6 @@ methik/
 │       └── workflow.md           # Multi-agent workflow rules
 ├── .gitignore                    # Git ignore configurations
 ├── AGENTS.md                     # This reference file
-├── assets/                       # Repository preview images & media
 ├── Cargo.lock                    # Cargo dependency lockfile
 ├── Cargo.toml                    # Root workspace config
 ├── LICENSE                       # GNU General Public License v3

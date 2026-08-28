@@ -5,7 +5,7 @@ use crate::config::paths::{
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+
 
 pub const MIN_YTDLP_VERSION: &str = "2024.01.01";
 pub const MIN_FFMPEG_VERSION: &str = "5.0";
@@ -144,7 +144,7 @@ pub fn is_ffmpeg_version_valid(found: &str) -> bool {
 
 /// Queries binary by path to fetch its version
 fn probe_binary_version(bin_path: &Path, arg: &str) -> Option<String> {
-    let output = Command::new(bin_path).arg(arg).output().ok()?;
+    let output = crate::engine::process::new_command(bin_path).arg(arg).output().ok()?;
     if output.status.success() {
         Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
     } else {

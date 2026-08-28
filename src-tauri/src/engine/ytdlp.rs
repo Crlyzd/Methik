@@ -6,9 +6,9 @@ use crate::engine::args_builder::{
 };
 use crate::engine::dependency::locate_binary;
 use crate::engine::parser::{parse_playlist_json, parse_progress_line, parse_video_json};
+use crate::engine::process::new_async_command;
 use std::process::Stdio;
 use std::sync::Arc;
-use tokio::process::Command;
 
 /// Locates the yt-dlp executable path or returns an AppError
 pub fn get_ytdlp_executable() -> Result<std::path::PathBuf, AppError> {
@@ -29,7 +29,7 @@ pub async fn fetch_video_metadata(url: &str) -> Result<VideoMetadata, AppError> 
     let settings = crate::config::paths::load_user_settings();
     let args = build_video_metadata_args(url, settings.cookie_source.as_ref());
 
-    let output = Command::new(&ytdlp_path)
+    let output = new_async_command(&ytdlp_path)
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -55,7 +55,7 @@ pub async fn fetch_playlist_metadata(url: &str) -> Result<PlaylistMetadata, AppE
     let settings = crate::config::paths::load_user_settings();
     let args = build_playlist_metadata_args(url, settings.cookie_source.as_ref());
 
-    let output = Command::new(&ytdlp_path)
+    let output = new_async_command(&ytdlp_path)
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -86,7 +86,7 @@ where
     let ytdlp_path = get_ytdlp_executable()?;
     let args = build_download_args(options);
 
-    let mut child = Command::new(&ytdlp_path)
+    let mut child = new_async_command(&ytdlp_path)
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
