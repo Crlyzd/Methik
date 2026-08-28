@@ -80,7 +80,11 @@ methik/
 ├── .agents/                      # Local AI agent rules (ignored in git)
 │   └── rules/
 │       ├── architecture.md       # Architectural rules and guidelines (Anti-monolithic policy)
-│       └── workflow.md           # Multi-agent workflow rules
+│       ├── workflow.md           # Multi-agent workflow protocol aggregator
+│       ├── orchestrator.md       # Workflow Director role specification
+│       ├── architect.md          # System Architect role specification
+│       ├── coding-specialist.md  # Primary Implementer role specification
+│       └── code-reviewer.md      # Quality Gatekeeper & Auditor role specification
 ├── .gitignore                    # Git ignore configurations
 ├── AGENTS.md                     # This reference file
 ├── Cargo.lock                    # Cargo dependency lockfile
